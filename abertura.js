@@ -5,7 +5,7 @@ export default class abertura extends Phaser.Scene {
     }
 
     preload () {
-        this.load.image('fundo', 'assets/abertura-fundo.png')
+        this.load.image('fundo', 'assets/capa.png')
     }
 
     create () {
