@@ -13,17 +13,23 @@ export default class precarregamento extends Phaser.Scene {
   }
 
   preload () {
+    this.load.image('chao', 'assets/mapa/chao.png')
+    this.load.image('flores', 'assets/mapa/flores.png')
+    this.load.image('vaso', 'assets/mapa/vaso.png')
     this.load.setPath('assets/')
     this.load.image('fundo', 'capa.png')
     this.load.spritesheet('fox', 'Spritesheet.png', {
       frameWidth: 64,
       frameHeight: 64
     })
+    this.load.spritesheet('bomba', 'bomba.png', {
+      frameWidth: 8,
+      frameHeight: 8
+    })
   }
 
-
-  create () {
-    this.scene.start('sala')
-  }
-  update () { }
+    create(){
+      this.scene.start('sala')
+    }
+    update() { }
 }
