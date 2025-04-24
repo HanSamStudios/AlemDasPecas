@@ -8,6 +8,7 @@ export default class fase1 extends Phaser.Scene {
 
   preload () {
     this.load.tilemapTiledJSON('mapa', 'assets/mapa/mapa.json')
+    this.load.image('arvore', 'assets/mapa/arvore.png')
     this.load.image('chao', 'assets/mapa/chao.png')
     this.load.image('flores', 'assets/mapa/flores.png')
     this.load.image('vaso', 'assets/mapa/vaso.png')
@@ -24,19 +25,24 @@ export default class fase1 extends Phaser.Scene {
   }
 
   create () {
+    this.cameras.main.setBackgroundColor('#87ceeb');
     // mapa
     this.tilemapMapa = this.make.tilemap({ key: 'mapa' })
     // tilesets
-    this.tilesetChao = this.tilemapMapa.addTilesetImage('chao')
-    this.tilesetVaso = this.tilemapMapa.addTilesetImage('vaso')
-    this.tilesetFlores = this.tilemapMapa.addTilesetImage('flores')
+    this.tilesetArvore = this.tilemapMapa.addTilesetImage('arvore', null, 256, 208)
+    this.tilesetChao = this.tilemapMapa.addTilesetImage('chao', null, 64, 64)
+    this.tilesetVaso = this.tilemapMapa.addTilesetImage('vaso', null, 64, 64)
+    this.tilesetFlores = this.tilemapMapa.addTilesetImage('flores', null, 64,32)
 
     // camadas
     this.layerChao = this.tilemapMapa.createLayer('chao', [this.tilesetChao])
-    this.layerObjeto = this.tilemapMapa.createLayer('objeto', [this.filesetFlores, this.tilesetVaso])
+    this.layerObjeto = this.tilemapMapa.createLayer('objeto', [this.tilesetFlores, this.tilesetVaso, this.tilesetArvore])
+
+    // spawn
+    const spawnPoint = this.tilemapMapa.findObject("spawn", obj => obj.name === "spawn")
 
     // personagens
-    this.fox = this.physics.add.sprite(100, 100, 'fox')
+    this.fox = this.physics.add.sprite(spawnPoint.x, spawnPoint.y, 'fox')
     this.cameras.main.startFollow(this.fox)
 
     // colisao
