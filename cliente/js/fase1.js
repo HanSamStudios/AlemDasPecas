@@ -72,9 +72,33 @@ export default class fase1 extends Phaser.Scene {
       frameRate: 10,
       repeat: -1
     })
+    this.anims.create({
+      key: 'personagem-andando-frente',
+      frames: this.anims.generateFrameNumbers('fox', { start: 19, end: 20 }),
+      frameRate: 10,
+      repeat: -1
+    })
+    this.anims.create({
+      key: 'personagem-andando-frente',
+      frames: this.anims.generateFrameNumbers('fox', { start: 20, end: 20 }),
+      frameRate: 10,
+      repeat: -1
+    })
+    this.anims.create({
+      key: 'personagem-andando-tras',
+      frames: this.anims.generateFrameNumbers('fox', { start: 19, end: 19}),
+      frameRate: 10,
+      repeat: -1
+    })
 
     this.anims.create({
       key: 'personagem-parado-direita',
+      frames: this.anims.generateFrameNumbers('fox', { start: 1, end: 1 }),
+      frameRate: 1
+    })
+
+    this.anims.create({
+      key: 'personagem-parado-esquerda',
       frames: this.anims.generateFrameNumbers('fox', { start: 1, end: 1 }),
       frameRate: 1
     })
@@ -88,7 +112,12 @@ export default class fase1 extends Phaser.Scene {
     // bomba
     this.bomba = this.physics.add.sprite(400, 225, 'bomba')
     this.bomba.body.setAllowGravity(false)
-
+this.anims.create({
+      key: 'personagem-andando-frente',
+      frames: this.anims.generateFrameNumbers('fox', { start: 19, end: 20 }),
+      frameRate: 10,
+      repeat: -1
+    })
     this.bomba.setInteractive().on('pointerdown', () => {
       this.bomba.play('bomba')
     })
