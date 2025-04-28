@@ -1,5 +1,4 @@
 export default class fase1 extends Phaser.Scene {
-
   constructor () {
     super('fase1')
 
@@ -7,6 +6,7 @@ export default class fase1 extends Phaser.Scene {
     this.speed = 125
     this.isJumping = false  // Variável para controle do pulo
     this.direcaoAtual = 'direita'
+    this.jumpPressed = false // Controle do botão de pulo
   }
 
   init () { }
@@ -18,13 +18,11 @@ export default class fase1 extends Phaser.Scene {
     this.load.image('flores', 'assets/mapa/flores.png')
     this.load.image('vaso', 'assets/mapa/vaso.png')
 
-    // botão
     this.load.spritesheet('bomba', 'assets/mapa/bomba.png', {
       frameWidth: 8,
       frameHeight: 8
     })
 
-    // personagem
     this.load.spritesheet('fox', 'assets/Spritesheet.png', {
       frameWidth: 64,
       frameHeight: 64
@@ -103,6 +101,13 @@ export default class fase1 extends Phaser.Scene {
       repeat: -1
     })
     this.anims.create({
+      key: 'personagem-wallgrab',
+      frames: this.anims.generateFrameNumbers('fox', { start: 21, end: 21 }),
+      frameRate: 10,
+      repeat: -1
+    })
+
+    this.anims.create({
       key: 'bomba',
       frames: this.anims.generateFrameNumbers('bomba', { start: 0, end: 6 }),
       frameRate: 10
@@ -128,12 +133,11 @@ export default class fase1 extends Phaser.Scene {
     this.botaoPulo = this.add.circle(680, 360, 35, 0x66ccff).setScrollFactor(0).setInteractive()
     this.add.text(665, 348, 'A', { fontSize: '20px', fill: '#000' }).setScrollFactor(0)
 
-    // Lógica de pulo (apenas uma vez no create)
+    // Controle de pulo
     this.botaoPulo.on('pointerdown', () => {
-      if (this.personagemLocal.body.blocked.down && !this.isJumping) {
-        this.personagemLocal.setVelocityY(-300)  // Força do pulo
-        this.isJumping = true
-        this.personagemLocal.anims.play('personagem-pulando', true)
+      // Só ativa pulo se o personagem estiver no chão ou agarrado na parede
+      if (this.personagemLocal.body.blocked.down || this.personagemLocal.body.blocked.left || this.personagemLocal.body.blocked.right) {
+        this.jumpPressed = true
       }
     })
   }
@@ -172,10 +176,15 @@ export default class fase1 extends Phaser.Scene {
       }
     }
 
-    // Animação de pulo e queda
+    // Animação de pulo, queda e agarrar parede
     if (!this.personagemLocal.body.blocked.down) {
-      if (this.personagemLocal.body.velocity.y < 0) {
-        // Subindo
+      // Checar se está encostando na parede
+      if (this.personagemLocal.body.blocked.left || this.personagemLocal.body.blocked.right) {
+        this.personagemLocal.setVelocityY(10) // Desce bem devagar enquanto segura
+        this.personagemLocal.anims.play('personagem-wallgrab', true)
+        this.isJumping = true
+      } else if (this.personagemLocal.body.velocity.y < 0) {
+        // Pulando para cima
         this.personagemLocal.anims.play('personagem-pulando', true)
         this.isJumping = true
       } else if (this.personagemLocal.body.velocity.y > 0) {
@@ -183,9 +192,18 @@ export default class fase1 extends Phaser.Scene {
         this.personagemLocal.anims.play('personagem-caindo', true)
         this.isJumping = true
       }
+
     } else {
       // Se encostar no chão
       this.isJumping = false
+    }
+
+    // Lógica de pulo no chão (permitir pulo enquanto se move)
+    if (this.jumpPressed && this.personagemLocal.body.blocked.down) {
+      this.personagemLocal.setVelocityY(-300) // Força do pulo
+      this.isJumping = true
+      this.personagemLocal.anims.play('personagem-pulando', true)
+      this.jumpPressed = false // Impede múltiplos saltos no mesmo clique
     }
   }
 }
