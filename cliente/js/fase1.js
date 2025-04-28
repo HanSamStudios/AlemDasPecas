@@ -6,6 +6,7 @@ export default class fase1 extends Phaser.Scene {
     this.threshold = 0.2
     this.speed = 125
     this.isJumping = false  // Variável para controle do pulo
+    this.direcaoAtual = 'direita'
   }
 
   init () { }
@@ -20,7 +21,7 @@ export default class fase1 extends Phaser.Scene {
     // botão
     this.load.spritesheet('bomba', 'assets/mapa/bomba.png', {
       frameWidth: 8,
-      frameWeight: 8
+      frameHeight: 8
     })
 
     // personagem
@@ -43,7 +44,7 @@ export default class fase1 extends Phaser.Scene {
     this.tilemapMapa = this.make.tilemap({ key: 'mapa' })
 
     // tilesets
-    this.tilesetArvore = this.tilemapMapa.addTilesetImage('arvore', null, 256, 208)
+    this.tilesetArvore = this.tilemapMapa.addTilesetImage('arvore')
     this.tilesetChao = this.tilemapMapa.addTilesetImage('chao', null, 64, 64)
     this.tilesetVaso = this.tilemapMapa.addTilesetImage('vaso', null, 64, 64)
     this.tilesetFlores = this.tilemapMapa.addTilesetImage('flores', null, 64, 32)
@@ -57,11 +58,8 @@ export default class fase1 extends Phaser.Scene {
 
     // personagem
     this.personagemLocal = this.physics.add.sprite(spawnPoint.x, spawnPoint.y, 'fox')
-    // Diminui a hitbox para 40x50 (ajuste como quiser)
-this.personagemLocal.body.setSize(40, 50)
-
-// Move a hitbox pra centralizar na base do sprite
-this.personagemLocal.body.setOffset(12, 14)
+    this.personagemLocal.body.setSize(40, 50)
+    this.personagemLocal.body.setOffset(12, 14)
     this.personagemLocal.body.setGravityY(400)
     this.cameras.main.startFollow(this.personagemLocal)
 
@@ -92,7 +90,18 @@ this.personagemLocal.body.setOffset(12, 14)
       frames: this.anims.generateFrameNumbers('fox', { start: 1, end: 1 }),
       frameRate: 1
     })
-
+    this.anims.create({
+      key: 'personagem-pulando',
+      frames: this.anims.generateFrameNumbers('fox', { start: 19, end: 19 }),
+      frameRate: 10,
+      repeat: -1
+    })
+    this.anims.create({
+      key: 'personagem-caindo',
+      frames: this.anims.generateFrameNumbers('fox', { start: 20, end: 20 }),
+      frameRate: 10,
+      repeat: -1
+    })
     this.anims.create({
       key: 'bomba',
       frames: this.anims.generateFrameNumbers('bomba', { start: 0, end: 6 }),
@@ -119,11 +128,12 @@ this.personagemLocal.body.setOffset(12, 14)
     this.botaoPulo = this.add.circle(680, 360, 35, 0x66ccff).setScrollFactor(0).setInteractive()
     this.add.text(665, 348, 'A', { fontSize: '20px', fill: '#000' }).setScrollFactor(0)
 
-    // Lógica de pulo
+    // Lógica de pulo (apenas uma vez no create)
     this.botaoPulo.on('pointerdown', () => {
       if (this.personagemLocal.body.blocked.down && !this.isJumping) {
         this.personagemLocal.setVelocityY(-300)  // Força do pulo
         this.isJumping = true
+        this.personagemLocal.anims.play('personagem-pulando', true)
       }
     })
   }
@@ -139,35 +149,43 @@ this.personagemLocal.body.setOffset(12, 14)
 
       if (velocityX > 0) {
         this.personagemLocal.setFlipX(false)
-        this.personagemLocal.anims.play('personagem-andando-direita', true)
+        if (!this.isJumping) {
+          this.personagemLocal.anims.play('personagem-andando-direita', true)
+        }
         this.direcaoAtual = 'direita'
       } else {
         this.personagemLocal.setFlipX(true)
-        this.personagemLocal.anims.play('personagem-andando-esquerda', true)
+        if (!this.isJumping) {
+          this.personagemLocal.anims.play('personagem-andando-esquerda', true)
+        }
         this.direcaoAtual = 'esquerda'
       }
     } else {
       this.personagemLocal.setVelocityX(0)
 
-      if (this.direcaoAtual === 'direita') {
-        this.personagemLocal.anims.play('personagem-parado-direita', true)
-      } else if (this.direcaoAtual === 'esquerda') {
-        this.personagemLocal.anims.play('personagem-parado-esquerda', true)
+      if (!this.isJumping) {
+        if (this.direcaoAtual === 'direita') {
+          this.personagemLocal.anims.play('personagem-parado-direita', true)
+        } else if (this.direcaoAtual === 'esquerda') {
+          this.personagemLocal.anims.play('personagem-parado-esquerda', true)
+        }
       }
     }
 
-    // Pulo se joystick e botão de pulo forem pressionados
-    this.botaoPulo.on('pointerdown', () => {
-      const force = this.joystick.force
-
-      if (this.personagemLocal.body.blocked.down && force > this.threshold) {
-        this.personagemLocal.setVelocityY(-300)
+    // Animação de pulo e queda
+    if (!this.personagemLocal.body.blocked.down) {
+      if (this.personagemLocal.body.velocity.y < 0) {
+        // Subindo
+        this.personagemLocal.anims.play('personagem-pulando', true)
+        this.isJumping = true
+      } else if (this.personagemLocal.body.velocity.y > 0) {
+        // Caindo
+        this.personagemLocal.anims.play('personagem-caindo', true)
+        this.isJumping = true
       }
-    })
-
-    // Lógica de pulo (só ao pressionar o botão)
-    if (this.personagemLocal.body.velocity.y === 0) {
-      this.isJumping = false  // Quando o personagem chega ao chão, ele pode pular novamente
+    } else {
+      // Se encostar no chão
+      this.isJumping = false
     }
   }
 }
