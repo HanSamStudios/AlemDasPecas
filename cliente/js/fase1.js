@@ -8,18 +8,25 @@ export default class fase1 extends Phaser.Scene {
     this.direcaoAtual = 'direita'
     this.jumpPressed = false
     this.isDashing = false
-    this.dashSpeed = 800 // Corrigido: velocidade realista de dash
+    this.dashSpeed = 800 // Corrigido: velocidade do dash
     this.canAirDash = true
+    this.canDash = true
+    this.dashCooldown = 500
   }
 
   init () { }
 
   preload () {
+
+    // carregar imagens
+
     this.load.tilemapTiledJSON('mapa', 'assets/mapa/mapa.json')
     this.load.image('arvore', 'assets/mapa/arvore.png')
     this.load.image('chao', 'assets/mapa/chao.png')
     this.load.image('flores', 'assets/mapa/flores.png')
     this.load.image('vaso', 'assets/mapa/vaso.png')
+
+    // carregar spritesheets
 
     this.load.spritesheet('bomba', 'assets/mapa/bomba.png', {
       frameWidth: 8,
@@ -31,6 +38,8 @@ export default class fase1 extends Phaser.Scene {
       frameHeight: 64
     })
 
+    // plugin joystick
+
     this.load.plugin(
       'rexvirtualjoystickplugin',
       'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexvirtualjoystickplugin.min.js',
@@ -39,11 +48,14 @@ export default class fase1 extends Phaser.Scene {
   }
 
   create () {
+    this.input.addPointer(3)
     this.trailGroup = this.add.group()
     this.cameras.main.setBackgroundColor('#87ceeb')
 
     this.tilemapMapa = this.make.tilemap({ key: 'mapa' })
 
+    // tileset
+    
     this.tilesetArvore = this.tilemapMapa.addTilesetImage('arvore')
     this.tilesetChao = this.tilemapMapa.addTilesetImage('chao', null, 64, 64)
     this.tilesetVaso = this.tilemapMapa.addTilesetImage('vaso', null, 64, 64)
@@ -103,8 +115,11 @@ export default class fase1 extends Phaser.Scene {
 
         this.personagemLocal.setTint(0xffffff)
 
-        const dashDirection = this.direcaoAtual === 'direita' ? 1 : -1
-        this.personagemLocal.setVelocityX(dashDirection * this.dashSpeed)
+        const dashAngle = Phaser.Math.DegToRad(this.joystick.angle)
+        const dashVelX = Math.cos(dashAngle) * this.dashSpeed
+        const dashVelY = Math.sin(dashAngle) * this.dashSpeed * 0.40
+
+        this.personagemLocal.setVelocity(dashVelX, dashVelY)
 
         this.time.delayedCall(150, () => {
           this.isDashing = false
