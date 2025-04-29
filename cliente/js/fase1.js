@@ -106,8 +106,9 @@ export default class fase1 extends Phaser.Scene {
 
     // Controle de dash usando física
     this.botaoDash.on('pointerdown', () => {
-      if (!this.isDashing && (this.personagemLocal.body.blocked.down || this.canAirDash)) {
+      if (!this.isDashing && this.canDash && (this.personagemLocal.body.blocked.down || this.canAirDash)) {
         this.isDashing = true
+        this.canDash = false // ativa o cooldown
 
         if (!this.personagemLocal.body.blocked.down) {
           this.canAirDash = false
@@ -116,17 +117,23 @@ export default class fase1 extends Phaser.Scene {
         this.personagemLocal.setTint(0xffffff)
 
         const dashAngle = Phaser.Math.DegToRad(this.joystick.angle)
-        const dashVelX = Math.cos(dashAngle) * this.dashSpeed
-        const dashVelY = Math.sin(dashAngle) * this.dashSpeed * 0.40
+        let dashVelX = Math.cos(dashAngle) * this.dashSpeed
+        let dashVelY = Math.sin(dashAngle) * this.dashSpeed * 0.40
 
         this.personagemLocal.setVelocity(dashVelX, dashVelY)
 
+        this.personagemLocal.anims.play('personagem-dash', true)
+
+        // Fim do dash após 150ms
         this.time.delayedCall(150, () => {
           this.isDashing = false
           this.personagemLocal.clearTint()
-        }, [], this)
+        })
 
-        this.personagemLocal.anims.play('personagem-dash', true)
+        // Cooldown de 500ms para novo dash
+        this.time.delayedCall(this.dashCooldown, () => {
+          this.canDash = true
+        })
       }
     })
   }
