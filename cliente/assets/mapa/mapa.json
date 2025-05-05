@@ -24,11 +24,34 @@
          "id":2,
          "name":"objeto",
          "opacity":1,
-         "startx":-32,
+         "startx":-16,
          "starty":48,
          "type":"tilelayer",
          "visible":true,
          "width":48,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "chunks":[
+                {
+                 "data":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFcAAEBXAABAVwAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+                 "height":16,
+                 "width":16,
+                 "x":-32,
+                 "y":48
+                }],
+         "compression":"",
+         "encoding":"base64",
+         "height":16,
+         "id":9,
+         "name":"espinhos",
+         "opacity":1,
+         "startx":-32,
+         "starty":48,
+         "type":"tilelayer",
+         "visible":true,
+         "width":16,
          "x":0,
          "y":0
         }, 
@@ -134,7 +157,7 @@
          "x":0,
          "y":0
         }],
- "nextlayerid":7,
+ "nextlayerid":10,
  "nextobjectid":5,
  "orientation":"orthogonal",
  "renderorder":"right-down",
@@ -144,7 +167,7 @@
         {
          "columns":1,
          "firstgid":1,
-         "image":"vaso.png",
+         "image":"backup jogo\/AlemDasPecas-main\/cliente\/assets\/mapa\/vaso.png",
          "imageheight":64,
          "imagewidth":64,
          "margin":0,
@@ -163,7 +186,7 @@
         {
          "columns":1,
          "firstgid":2,
-         "image":"flores.png",
+         "image":"backup jogo\/AlemDasPecas-main\/cliente\/assets\/mapa\/flores.png",
          "imageheight":32,
          "imagewidth":64,
          "margin":0,
@@ -176,7 +199,7 @@
         {
          "columns":12,
          "firstgid":3,
-         "image":"chao.png",
+         "image":"backup jogo\/AlemDasPecas-main\/cliente\/assets\/mapa\/chao.png",
          "imageheight":384,
          "imagewidth":768,
          "margin":0,
@@ -842,7 +865,7 @@
         {
          "columns":6,
          "firstgid":75,
-         "image":"..\/..\/..\/Downloads\/sprites 64x64\/platformer_metroidvania asset pack v1.01\/tiles and background_foreground (new)\/tileset_32x32(new).png",
+         "image":"backup jogo\/AlemDasPecas-main\/Downloads\/sprites 64x64\/platformer_metroidvania asset pack v1.01\/tiles and background_foreground (new)\/tileset_32x32(new).png",
          "imageheight":192,
          "imagewidth":384,
          "margin":0,
@@ -855,7 +878,7 @@
         {
          "columns":12,
          "firstgid":75,
-         "image":"..\/..\/..\/Downloads\/sprites 64x64\/platformer_metroidvania asset pack v1.01\/tiles and background_foreground (new)\/tileset_32x32(new).png",
+         "image":"backup jogo\/AlemDasPecas-main\/Downloads\/sprites 64x64\/platformer_metroidvania asset pack v1.01\/tiles and background_foreground (new)\/tileset_32x32(new).png",
          "imageheight":192,
          "imagewidth":384,
          "margin":0,
@@ -868,7 +891,7 @@
         {
          "columns":4,
          "firstgid":75,
-         "image":"..\/..\/..\/..\/..\/sprites 64x64\/platformer_metroidvania asset pack v1.01\/assets jogo\/props\/arvore.png",
+         "image":"sprites 64x64\/platformer_metroidvania asset pack v1.01\/assets jogo\/props\/arvore.png",
          "imageheight":208,
          "imagewidth":256,
          "margin":0,
@@ -876,6 +899,29 @@
          "spacing":0,
          "tilecount":12,
          "tileheight":64,
+         "tilewidth":64
+        }, 
+        {
+         "columns":1,
+         "firstgid":87,
+         "image":"sprites 64x64\/espinhos.png",
+         "imageheight":64,
+         "imagewidth":64,
+         "margin":0,
+         "name":"espinhos",
+         "spacing":0,
+         "tilecount":1,
+         "tileheight":64,
+         "tiles":[
+                {
+                 "id":0,
+                 "properties":[
+                        {
+                         "name":"collides",
+                         "type":"bool",
+                         "value":true
+                        }]
+                }],
          "tilewidth":64
         }],
  "tilewidth":64,

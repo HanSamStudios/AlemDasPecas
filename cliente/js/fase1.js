@@ -13,8 +13,10 @@ export default class fase1 extends Phaser.Scene {
     this.canDash = true
     this.dashCooldown = 500
     this.isWallGrabbing = false
-    this.ultimaParedeGrudada = null // Variável para armazenar a parede onde o personagem esteve
-    this.ladoParedeAtual = null // Lado atual da parede
+    this.ultimaParedeGrudada = null
+    this.ladoParedeAtual = null
+    this.levandoDano = false // Nova variável para controle de invulnerabilidade
+    this.spawnPoint = null // Variável para o ponto de spawn
   }
 
   preload () {
@@ -23,6 +25,7 @@ export default class fase1 extends Phaser.Scene {
     this.load.image('chao', 'assets/mapa/chao.png')
     this.load.image('flores', 'assets/mapa/flores.png')
     this.load.image('vaso', 'assets/mapa/vaso.png')
+    this.load.image('espinhos', 'assets/mapa/espinhos.png')
 
     this.load.spritesheet('bomba', 'assets/mapa/bomba.png', { frameWidth: 8, frameHeight: 8 })
     this.load.spritesheet('fox', 'assets/Spritesheet.png', { frameWidth: 64, frameHeight: 64 })
@@ -39,12 +42,16 @@ export default class fase1 extends Phaser.Scene {
     this.tilesetArvore = this.tilemapMapa.addTilesetImage('arvore')
     this.tilesetChao = this.tilemapMapa.addTilesetImage('chao', null, 64, 64)
     this.tilesetVaso = this.tilemapMapa.addTilesetImage('vaso', null, 64, 64)
+    this.tilesetEspinhos = this.tilemapMapa.addTilesetImage('espinhos', null, 64, 64)
     this.tilesetFlores = this.tilemapMapa.addTilesetImage('flores', null, 64, 32)
 
     this.layerChao = this.tilemapMapa.createLayer('chao', [this.tilesetChao])
+    this.layerEspinhos = this.tilemapMapa.createLayer('espinhos', [this.tilesetEspinhos])
     this.layerObjeto = this.tilemapMapa.createLayer('objeto', [this.tilesetFlores, this.tilesetVaso, this.tilesetArvore])
 
+    
     const spawnPoint = this.tilemapMapa.findObject("spawn", obj => obj.name === "spawn")
+    this.spawnPoint = spawnPoint // Guardando o ponto de spawn
 
     this.personagemLocal = this.physics.add.sprite(spawnPoint.x, spawnPoint.y, 'fox')
     this.personagemLocal.body.setSize(40, 50)
@@ -54,6 +61,21 @@ export default class fase1 extends Phaser.Scene {
 
     this.layerChao.setCollisionByProperty({ collides: true })
     this.physics.add.collider(this.personagemLocal, this.layerChao)
+
+    this.layerEspinhos.setCollisionByProperty({ collides: true })
+
+    // Verificando se o personagem tocou nos espinhos
+    this.physics.add.overlap(
+      this.personagemLocal,
+      this.layerEspinhos,
+      (player, tile) => {
+        if (!this.personagemLocal.isInvulnerable && tile.index !== -1) {
+          this.tratarDano();
+        }
+      },
+      (player, tile) => tile.index !== -1, // Só se o tile for um espinho
+      this
+    )
 
     this.createAnims()
 
@@ -98,7 +120,6 @@ export default class fase1 extends Phaser.Scene {
 
         this.personagemLocal.setTint(0xffffff)
 
-        // NOVO: Dash lateral fixo baseado na direção visual (flipX)
         let dashVelX = this.personagemLocal.flipX ? -this.dashSpeed : this.dashSpeed
         let dashVelY = 0
 
@@ -119,93 +140,123 @@ export default class fase1 extends Phaser.Scene {
     })
   }
 
-  update () {
-    const angle = Phaser.Math.DegToRad(this.joystick.angle)
-    const force = this.joystick.force
 
+  update () {
+    const angle = Phaser.Math.DegToRad(this.joystick.angle);
+    const force = this.joystick.force;
+
+    // Verifica se o personagem está invulnerável, não faz mais nada no update enquanto estiver nesse estado
+    if (this.personagemLocal.isInvulnerable) return;
+
+    // Movimento normal
     if (!this.isDashing && !this.isWallGrabbing) {
       if (force > this.threshold) {
-        const velocityX = Math.cos(angle) * this.speed
-        this.personagemLocal.setVelocityX(velocityX)
+        const velocityX = Math.cos(angle) * this.speed;
+        this.personagemLocal.setVelocityX(velocityX);
 
         if (velocityX > 0) {
-          this.personagemLocal.setFlipX(false)
-          if (!this.isJumping) this.personagemLocal.anims.play('personagem-andando-direita', true)
-          this.direcaoAtual = 'direita'
+          this.personagemLocal.setFlipX(false);
+          if (!this.isJumping) this.personagemLocal.anims.play('personagem-andando-direita', true);
+          this.direcaoAtual = 'direita';
         } else {
-          this.personagemLocal.setFlipX(true)
-          if (!this.isJumping) this.personagemLocal.anims.play('personagem-andando-esquerda', true)
-          this.direcaoAtual = 'esquerda'
+          this.personagemLocal.setFlipX(true);
+          if (!this.isJumping) this.personagemLocal.anims.play('personagem-andando-esquerda', true);
+          this.direcaoAtual = 'esquerda';
         }
       } else {
-        this.personagemLocal.setVelocityX(0)
+        this.personagemLocal.setVelocityX(0);
         if (!this.isJumping && !this.isWallGrabbing) {
-          if (this.direcaoAtual === 'direita') this.personagemLocal.anims.play('personagem-parado-direita', true)
-          else this.personagemLocal.anims.play('personagem-parado-esquerda', true)
+          if (this.direcaoAtual === 'direita') this.personagemLocal.anims.play('personagem-parado-direita', true);
+          else this.personagemLocal.anims.play('personagem-parado-esquerda', true);
         }
       }
     } else if (this.isDashing) {
-      this.createTrail()
+      this.createTrail();
     }
 
     // WALL GRAB COM BLOQUEIO DE ESCALAR A MESMA PAREDE
     if (!this.personagemLocal.body.blocked.down) {
       if ((this.personagemLocal.body.blocked.left || this.personagemLocal.body.blocked.right) && !this.isDashing) {
-        const ladoAtual = this.personagemLocal.body.blocked.left ? 'left' : 'right'
+        const ladoAtual = this.personagemLocal.body.blocked.left ? 'left' : 'right';
 
         if (this.ultimaParedeGrudada !== ladoAtual) {
-          this.personagemLocal.body.setGravityY(100)
-          this.personagemLocal.setVelocityY(2)
+          this.personagemLocal.body.setGravityY(100);
+          this.personagemLocal.setVelocityY(2);
 
-          this.personagemLocal.anims.play('personagem-wallgrab', true)
-          this.isWallGrabbing = true
-          this.isJumping = true
-          this.ladoParedeAtual = ladoAtual
+          this.personagemLocal.anims.play('personagem-wallgrab', true);
+          this.isWallGrabbing = true;
+          this.isJumping = true;
+          this.ladoParedeAtual = ladoAtual;
         }
       } else if (this.personagemLocal.body.velocity.y < 0) {
-        this.personagemLocal.anims.play('personagem-pulando', true)
-        this.isWallGrabbing = false
-        this.isJumping = true
+        this.personagemLocal.anims.play('personagem-pulando', true);
+        this.isWallGrabbing = false;
+        this.isJumping = true;
       } else if (this.personagemLocal.body.velocity.y > 0 && !this.isWallGrabbing) {
-        this.personagemLocal.anims.play('personagem-caindo', true)
-        this.isJumping = true
+        this.personagemLocal.anims.play('personagem-caindo', true);
+        this.isJumping = true;
       }
     } else {
-      this.isJumping = false
-      this.canAirDash = true
-      this.isWallGrabbing = false
-      this.personagemLocal.body.setGravityY(400)
-      this.ultimaParedeGrudada = null // Reset ao tocar no chão
+      this.isJumping = false;
+      this.canAirDash = true;
+      this.isWallGrabbing = false;
+      this.personagemLocal.body.setGravityY(400);
+      this.ultimaParedeGrudada = null;
 
       if (this.personagemLocal.body.velocity.y > 0) {
-        this.personagemLocal.setVelocityY(Math.min(this.personagemLocal.body.velocity.y, 500))
+        this.personagemLocal.setVelocityY(Math.min(this.personagemLocal.body.velocity.y, 500));
       }
-    }
-
-    // PULO NA PAREDE
-    if (this.jumpPressed && this.isWallGrabbing) {
-      this.personagemLocal.setVelocityY(-150)
-      this.personagemLocal.setVelocityX(this.ladoParedeAtual === 'left' ? 200 : -200) // impulso para o lado oposto
-      this.isJumping = true
-      this.personagemLocal.anims.play('personagem-pulando', true)
-      this.jumpPressed = false
-      this.isWallGrabbing = false
-      this.ultimaParedeGrudada = this.ladoParedeAtual
     }
 
     if (this.jumpPressed && (this.personagemLocal.body.blocked.down || this.isWallGrabbing)) {
       if (this.isWallGrabbing) {
-        this.personagemLocal.setVelocityY(-10000)
+        this.personagemLocal.setVelocityY(-10000);
       } else {
-        this.personagemLocal.setVelocityY(-300)
+        this.personagemLocal.setVelocityY(-300);
       }
 
-      this.isJumping = true
-      this.personagemLocal.anims.play('personagem-pulando', true)
-      this.jumpPressed = false
-      this.isWallGrabbing = false
+      this.isJumping = true;
+      this.personagemLocal.anims.play('personagem-pulando', true);
+      this.jumpPressed = false;
+      this.isWallGrabbing = false;
     }
   }
+
+  tratarDano () {
+    if (this.personagemLocal.isInvulnerable) return;
+
+    this.personagemLocal.isInvulnerable = true;
+    this.personagemLocal.setVelocity(0, 0);
+    this.personagemLocal.anims.play('personagem-dano', true); // Garante que a animação de dano toque sem sobrepor com outras animações
+
+    // Cor de dano mais suave
+    this.personagemLocal.setTint(0xff7f7f); // Aplique um tom de vermelho mais claro
+
+    const knockback = this.personagemLocal.flipX ? 150 : -150;
+    this.personagemLocal.setVelocity(knockback, -200);
+
+    this.isDashing = true;
+    this.jumpPressed = false;
+
+    // Não vai permitir que a animação de dano se sobreponha com outra animação durante a invulnerabilidade
+    this.time.delayedCall(750, () => { // Reduzimos o tempo para 500ms
+      this.personagemLocal.clearTint(); // Remove o tint de dano
+      this.personagemLocal.setPosition(this.spawnPoint.x, this.spawnPoint.y); // Coloca o personagem no ponto de spawn
+      this.isDashing = false;
+      this.personagemLocal.isInvulnerable = false; // Permite que o personagem receba dano novamente
+
+      // Aqui, a animação de dano é interrompida, e o personagem volta para uma animação neutra
+      // Ou, dependendo de sua lógica de animações, pode retornar à animação de "parado" ou outra animação básica.
+      if (this.direcaoAtual === 'direita') {
+        this.personagemLocal.anims.play('personagem-parado-direita', true);
+      } else {
+        this.personagemLocal.anims.play('personagem-parado-esquerda', true);
+      }
+    });
+  }
+
+
+
 
   createTrail () {
     const trail = this.add.sprite(this.personagemLocal.x, this.personagemLocal.y, 'fox')
@@ -236,5 +287,10 @@ export default class fase1 extends Phaser.Scene {
     this.anims.create({ key: 'personagem-caindo', frames: this.anims.generateFrameNumbers('fox', { start: 20, end: 20 }), frameRate: 10, repeat: -1 })
     this.anims.create({ key: 'personagem-wallgrab', frames: this.anims.generateFrameNumbers('fox', { start: 21, end: 21 }), frameRate: 10, repeat: -1 })
     this.anims.create({ key: 'personagem-dash', frames: this.anims.generateFrameNumbers('fox', { start: 30, end: 33 }), frameRate: 20, repeat: 0 })
+
+    // Alteração: A animação de dano agora é tocada uma vez, não repetidamente.
+    this.anims.create({ key: 'personagem-dano', frames: this.anims.generateFrameNumbers('fox', { start: 17, end: 18 }), frameRate: 6, repeat: 0 });
+    
   }
+  
 }
