@@ -15,8 +15,8 @@ export default class fase1 extends Phaser.Scene {
     this.isWallGrabbing = false
     this.ultimaParedeGrudada = null
     this.ladoParedeAtual = null
-    this.levandoDano = false // Nova variável para controle de invulnerabilidade
-    this.spawnPoint = null // Variável para o ponto de spawn
+    this.levandoDano = false
+    this.spawnPoint = null
   }
 
   preload () {
@@ -26,10 +26,8 @@ export default class fase1 extends Phaser.Scene {
     this.load.image('flores', 'assets/mapa/flores.png')
     this.load.image('vaso', 'assets/mapa/vaso.png')
     this.load.image('espinhos', 'assets/mapa/espinhos.png')
-
     this.load.spritesheet('bomba', 'assets/mapa/bomba.png', { frameWidth: 8, frameHeight: 8 })
     this.load.spritesheet('fox', 'assets/Spritesheet.png', { frameWidth: 64, frameHeight: 64 })
-
     this.load.plugin('rexvirtualjoystickplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexvirtualjoystickplugin.min.js', true)
   }
 
@@ -42,16 +40,15 @@ export default class fase1 extends Phaser.Scene {
     this.tilesetArvore = this.tilemapMapa.addTilesetImage('arvore')
     this.tilesetChao = this.tilemapMapa.addTilesetImage('chao', null, 64, 64)
     this.tilesetVaso = this.tilemapMapa.addTilesetImage('vaso', null, 64, 64)
-    this.tilesetEspinhos = this.tilemapMapa.addTilesetImage('espinhos', null, 64, 64)
+    this.tilesetEspinhos = this.tilemapMapa.addTilesetImage('espinhos')
     this.tilesetFlores = this.tilemapMapa.addTilesetImage('flores', null, 64, 32)
 
     this.layerChao = this.tilemapMapa.createLayer('chao', [this.tilesetChao])
     this.layerEspinhos = this.tilemapMapa.createLayer('espinhos', [this.tilesetEspinhos])
     this.layerObjeto = this.tilemapMapa.createLayer('objeto', [this.tilesetFlores, this.tilesetVaso, this.tilesetArvore])
 
-    
     const spawnPoint = this.tilemapMapa.findObject("spawn", obj => obj.name === "spawn")
-    this.spawnPoint = spawnPoint // Guardando o ponto de spawn
+    this.spawnPoint = spawnPoint
 
     this.personagemLocal = this.physics.add.sprite(spawnPoint.x, spawnPoint.y, 'fox')
     this.personagemLocal.body.setSize(40, 50)
@@ -63,8 +60,6 @@ export default class fase1 extends Phaser.Scene {
     this.physics.add.collider(this.personagemLocal, this.layerChao)
 
     this.layerEspinhos.setCollisionByProperty({ collides: true })
-
-    // Verificando se o personagem tocou nos espinhos
     this.physics.add.overlap(
       this.personagemLocal,
       this.layerEspinhos,
@@ -73,7 +68,7 @@ export default class fase1 extends Phaser.Scene {
           this.tratarDano();
         }
       },
-      (player, tile) => tile.index !== -1, // Só se o tile for um espinho
+      (player, tile) => tile.index !== -1,
       this
     )
 
@@ -110,19 +105,12 @@ export default class fase1 extends Phaser.Scene {
         this.isDashing = true
         this.canDash = false
 
-        if (this.isWallGrabbing) {
-          this.personagemLocal.setVelocityY(0)
-        }
-
-        if (!this.personagemLocal.body.blocked.down) {
-          this.canAirDash = false
-        }
+        if (this.isWallGrabbing) this.personagemLocal.setVelocityY(0)
+        if (!this.personagemLocal.body.blocked.down) this.canAirDash = false
 
         this.personagemLocal.setTint(0xffffff)
-
-        let dashVelX = this.personagemLocal.flipX ? -this.dashSpeed : this.dashSpeed
-        let dashVelY = 0
-
+        const dashVelX = this.personagemLocal.flipX ? -this.dashSpeed : this.dashSpeed
+        const dashVelY = 0
         this.personagemLocal.setVelocity(dashVelX, dashVelY)
         this.personagemLocal.anims.play('personagem-dash', true)
 
@@ -140,15 +128,12 @@ export default class fase1 extends Phaser.Scene {
     })
   }
 
-
   update () {
     const angle = Phaser.Math.DegToRad(this.joystick.angle);
     const force = this.joystick.force;
 
-    // Verifica se o personagem está invulnerável, não faz mais nada no update enquanto estiver nesse estado
     if (this.personagemLocal.isInvulnerable) return;
 
-    // Movimento normal
     if (!this.isDashing && !this.isWallGrabbing) {
       if (force > this.threshold) {
         const velocityX = Math.cos(angle) * this.speed;
@@ -174,10 +159,19 @@ export default class fase1 extends Phaser.Scene {
       this.createTrail();
     }
 
-    // WALL GRAB COM BLOQUEIO DE ESCALAR A MESMA PAREDE
+    const tileSize = this.tilemapMapa.tileWidth;
+    const playerX = this.personagemLocal.x;
+    const playerY = this.personagemLocal.y + this.personagemLocal.body.height / 2;
+
+    const tileLeft = this.layerChao.getTileAtWorldXY(playerX - tileSize / 2 - 1, playerY, true);
+    const tileRight = this.layerChao.getTileAtWorldXY(playerX + tileSize / 2 + 1, playerY, true);
+
+    const encostadoEsquerda = this.personagemLocal.body.blocked.left && tileLeft && tileLeft.collides;
+    const encostadoDireita = this.personagemLocal.body.blocked.right && tileRight && tileRight.collides;
+
     if (!this.personagemLocal.body.blocked.down) {
-      if ((this.personagemLocal.body.blocked.left || this.personagemLocal.body.blocked.right) && !this.isDashing) {
-        const ladoAtual = this.personagemLocal.body.blocked.left ? 'left' : 'right';
+      if ((encostadoEsquerda || encostadoDireita) && !this.isDashing) {
+        const ladoAtual = encostadoEsquerda ? 'left' : 'right';
 
         if (this.ultimaParedeGrudada !== ladoAtual) {
           this.personagemLocal.body.setGravityY(100);
@@ -210,7 +204,8 @@ export default class fase1 extends Phaser.Scene {
 
     if (this.jumpPressed && (this.personagemLocal.body.blocked.down || this.isWallGrabbing)) {
       if (this.isWallGrabbing) {
-        this.personagemLocal.setVelocityY(-10000);
+        this.personagemLocal.setVelocityY(-175);
+        this.ultimaParedeGrudada = this.ladoParedeAtual;
       } else {
         this.personagemLocal.setVelocityY(-300);
       }
@@ -227,10 +222,8 @@ export default class fase1 extends Phaser.Scene {
 
     this.personagemLocal.isInvulnerable = true;
     this.personagemLocal.setVelocity(0, 0);
-    this.personagemLocal.anims.play('personagem-dano', true); // Garante que a animação de dano toque sem sobrepor com outras animações
-
-    // Cor de dano mais suave
-    this.personagemLocal.setTint(0xff7f7f); // Aplique um tom de vermelho mais claro
+    this.personagemLocal.anims.play('personagem-dano', true);
+    this.personagemLocal.setTint(0xff7f7f);
 
     const knockback = this.personagemLocal.flipX ? 150 : -150;
     this.personagemLocal.setVelocity(knockback, -200);
@@ -238,15 +231,12 @@ export default class fase1 extends Phaser.Scene {
     this.isDashing = true;
     this.jumpPressed = false;
 
-    // Não vai permitir que a animação de dano se sobreponha com outra animação durante a invulnerabilidade
-    this.time.delayedCall(750, () => { // Reduzimos o tempo para 500ms
-      this.personagemLocal.clearTint(); // Remove o tint de dano
-      this.personagemLocal.setPosition(this.spawnPoint.x, this.spawnPoint.y); // Coloca o personagem no ponto de spawn
+    this.time.delayedCall(750, () => {
+      this.personagemLocal.clearTint();
+      this.personagemLocal.setPosition(this.spawnPoint.x, this.spawnPoint.y);
       this.isDashing = false;
-      this.personagemLocal.isInvulnerable = false; // Permite que o personagem receba dano novamente
+      this.personagemLocal.isInvulnerable = false;
 
-      // Aqui, a animação de dano é interrompida, e o personagem volta para uma animação neutra
-      // Ou, dependendo de sua lógica de animações, pode retornar à animação de "parado" ou outra animação básica.
       if (this.direcaoAtual === 'direita') {
         this.personagemLocal.anims.play('personagem-parado-direita', true);
       } else {
@@ -254,9 +244,6 @@ export default class fase1 extends Phaser.Scene {
       }
     });
   }
-
-
-
 
   createTrail () {
     const trail = this.add.sprite(this.personagemLocal.x, this.personagemLocal.y, 'fox')
@@ -287,10 +274,6 @@ export default class fase1 extends Phaser.Scene {
     this.anims.create({ key: 'personagem-caindo', frames: this.anims.generateFrameNumbers('fox', { start: 20, end: 20 }), frameRate: 10, repeat: -1 })
     this.anims.create({ key: 'personagem-wallgrab', frames: this.anims.generateFrameNumbers('fox', { start: 21, end: 21 }), frameRate: 10, repeat: -1 })
     this.anims.create({ key: 'personagem-dash', frames: this.anims.generateFrameNumbers('fox', { start: 30, end: 33 }), frameRate: 20, repeat: 0 })
-
-    // Alteração: A animação de dano agora é tocada uma vez, não repetidamente.
-    this.anims.create({ key: 'personagem-dano', frames: this.anims.generateFrameNumbers('fox', { start: 17, end: 18 }), frameRate: 6, repeat: 0 });
-    
+    this.anims.create({ key: 'personagem-dano', frames: this.anims.generateFrameNumbers('fox', { start: 17, end: 18 }), frameRate: 6, repeat: 0 })
   }
-  
 }
