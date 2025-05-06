@@ -28,16 +28,18 @@ export default class fase1 extends Phaser.Scene {
     this.load.image('espinhos', 'assets/mapa/espinhos.png')
     this.load.audio('musica', 'assets/musica.mp3')
     this.load.audio('morte', 'assets/morte.mp3')
+    this.load.image('fceu', 'assets/ceu.jpg')
     this.load.spritesheet('bomba', 'assets/mapa/bomba.png', { frameWidth: 8, frameHeight: 8 })
     this.load.spritesheet('fox', 'assets/Spritesheet.png', { frameWidth: 64, frameHeight: 64 })
     this.load.plugin('rexvirtualjoystickplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexvirtualjoystickplugin.min.js', true)
   }
 
-  create () {
+  create () { 
     this.somMorte = this.sound.add('morte');
     this.input.addPointer(3)
     this.trailGroup = this.add.group()
     this.cameras.main.setBackgroundColor('#87ceeb')
+    
 
     this.tilemapMapa = this.make.tilemap({ key: 'mapa' })
     this.tilesetArvore = this.tilemapMapa.addTilesetImage('arvore')
@@ -56,7 +58,7 @@ export default class fase1 extends Phaser.Scene {
     this.personagemLocal = this.physics.add.sprite(spawnPoint.x, spawnPoint.y, 'fox')
     this.personagemLocal.body.setSize(40, 50)
     this.personagemLocal.body.setOffset(12, 14)
-    this.personagemLocal.body.setGravityY(400)
+    this.personagemLocal.body.setGravityY(10)
     this.cameras.main.startFollow(this.personagemLocal)
 
     this.layerChao.setCollisionByProperty({ collides: true })
@@ -105,8 +107,8 @@ export default class fase1 extends Phaser.Scene {
     })
 
     this.joystick = this.plugins.get('rexvirtualjoystickplugin').add(this, {
-      x: 200,
-      y: 310,
+      x: 125,
+      y: 350,
       radius: 50,
       base: this.add.circle(120, 360, 50, 0x888888).setScrollFactor(0),
       thumb: this.add.circle(120, 360, 25, 0xcccccc).setScrollFactor(0)
@@ -198,7 +200,7 @@ export default class fase1 extends Phaser.Scene {
         const ladoAtual = encostadoEsquerda ? 'left' : 'right';
 
         if (this.ultimaParedeGrudada !== ladoAtual) {
-          this.personagemLocal.body.setGravityY(100);
+          this.personagemLocal.body.setGravityY(300);
           this.personagemLocal.setVelocityY(2);
 
           this.personagemLocal.anims.play('personagem-wallgrab', true);
@@ -228,8 +230,10 @@ export default class fase1 extends Phaser.Scene {
 
     if (this.jumpPressed && (this.personagemLocal.body.blocked.down || this.isWallGrabbing)) {
       if (this.isWallGrabbing) {
-        this.personagemLocal.setVelocityY(-170);
+        const impulsoX = this.ladoParedeAtual === 'left' ? 200 : -200;
+        this.personagemLocal.setVelocity(impulsoX, -230); // impulso lateral + pulo mais forte
         this.ultimaParedeGrudada = this.ladoParedeAtual;
+      
       } else {
         this.personagemLocal.setVelocityY(-300);
       }
