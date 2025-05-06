@@ -58,19 +58,39 @@ export default class fase1 extends Phaser.Scene {
 
     this.layerChao.setCollisionByProperty({ collides: true })
     this.physics.add.collider(this.personagemLocal, this.layerChao)
+    // Crie o grupo de espinhos físicos
+    this.espinhosObjetos = this.physics.add.group({
+      allowGravity: false,
+      immovable: true
+    });
 
-    this.layerEspinhos.setCollisionByProperty({ collides: true })
+    // Pegue todos os objetos da camada "espinhosObjetos" no Tiled
+    this.tilemapMapa.getObjectLayer('espinhosObjetos').objects.forEach(obj => {
+      const espinho = this.add.rectangle(
+        obj.x + obj.width / 2,
+        obj.y + obj.height / 2, // <- Altere aqui de - para +
+        obj.width,
+        obj.height
+      );
+      this.physics.add.existing(espinho); // Adiciona física ao retângulo
+      espinho.body.setAllowGravity(false);
+      espinho.body.setImmovable(true);
+      espinho.setVisible(false); // Deixe invisível se for só hitbox
+      this.espinhosObjetos.add(espinho);
+    });
+
+    // Agora use overlap com o grupo criado
     this.physics.add.overlap(
       this.personagemLocal,
-      this.layerEspinhos,
-      (player, tile) => {
-        if (!this.personagemLocal.isInvulnerable && tile.index !== -1) {
+      this.espinhosObjetos,
+      () => {
+        if (!this.personagemLocal.isInvulnerable) {
           this.tratarDano();
         }
       },
-      (player, tile) => tile.index !== -1,
+      null,
       this
-    )
+    );
 
     this.createAnims()
 
@@ -84,8 +104,8 @@ export default class fase1 extends Phaser.Scene {
       x: 200,
       y: 310,
       radius: 50,
-      base: this.add.circle(120, 360, 50, 0x888888),
-      thumb: this.add.circle(120, 360, 25, 0xcccccc)
+      base: this.add.circle(120, 360, 50, 0x888888).setScrollFactor(0),
+      thumb: this.add.circle(120, 360, 25, 0xcccccc).setScrollFactor(0)
     })
 
     this.botaoPulo = this.add.circle(680, 360, 35, 0x66ccff).setScrollFactor(0).setInteractive()
