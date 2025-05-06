@@ -17,6 +17,7 @@ export default class fase1 extends Phaser.Scene {
     this.ladoParedeAtual = null
     this.levandoDano = false
     this.spawnPoint = null
+    this.contadorCristais = 0; // Inicialize o contador de cristais
   }
 
   preload () {
@@ -26,6 +27,10 @@ export default class fase1 extends Phaser.Scene {
     this.load.image('flores', 'assets/mapa/flores.png')
     this.load.image('vaso', 'assets/mapa/vaso.png')
     this.load.image('espinhos', 'assets/mapa/espinhos.png')
+    this.load.spritesheet('crystal', 'assets/greencrystal.png', {
+      frameWidth: 64,
+      frameHeight: 64
+    });
     this.load.audio('musica', 'assets/musica.mp3')
     this.load.audio('morte', 'assets/morte.mp3')
     this.load.image('fceu', 'assets/ceu.jpg')
@@ -34,12 +39,11 @@ export default class fase1 extends Phaser.Scene {
     this.load.plugin('rexvirtualjoystickplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexvirtualjoystickplugin.min.js', true)
   }
 
-  create () { 
+  create () {
     this.somMorte = this.sound.add('morte');
     this.input.addPointer(3)
     this.trailGroup = this.add.group()
     this.cameras.main.setBackgroundColor('#87ceeb')
-    
 
     this.tilemapMapa = this.make.tilemap({ key: 'mapa' })
     this.tilesetArvore = this.tilemapMapa.addTilesetImage('arvore')
@@ -63,48 +67,11 @@ export default class fase1 extends Phaser.Scene {
 
     this.layerChao.setCollisionByProperty({ collides: true })
     this.physics.add.collider(this.personagemLocal, this.layerChao)
-    // Crie o grupo de espinhos físicos
+
     this.espinhosObjetos = this.physics.add.group({
       allowGravity: false,
       immovable: true
     });
-
-    // Pegue todos os objetos da camada "espinhosObjetos" no Tiled
-    this.tilemapMapa.getObjectLayer('espinhosObjetos').objects.forEach(obj => {
-      const espinho = this.add.rectangle(
-        obj.x + obj.width / 2,
-        obj.y + obj.height / 2, // <- Altere aqui de - para +
-        obj.width,
-        obj.height
-      );
-      this.physics.add.existing(espinho); // Adiciona física ao retângulo
-      espinho.body.setAllowGravity(false);
-      espinho.body.setImmovable(true);
-      espinho.setVisible(false); // Deixe invisível se for só hitbox
-      this.espinhosObjetos.add(espinho);
-    });
-
-    // Agora use overlap com o grupo criado
-    this.physics.add.overlap(
-      this.personagemLocal,
-      this.espinhosObjetos,
-      () => {
-        if (!this.personagemLocal.isInvulnerable) {
-          this.somMorte.play();
-          this.tratarDano();
-        }
-      },
-      null,
-      this
-    );
-
-    this.createAnims()
-
-    this.bomba = this.physics.add.sprite(400, 225, 'bomba')
-    this.bomba.body.setAllowGravity(false)
-    this.bomba.setInteractive().on('pointerdown', () => {
-      this.bomba.play('bomba')
-    })
 
     this.joystick = this.plugins.get('rexvirtualjoystickplugin').add(this, {
       x: 125,
@@ -152,6 +119,89 @@ export default class fase1 extends Phaser.Scene {
         this.isWallGrabbing = false
       }
     })
+
+    this.tilemapMapa.getObjectLayer('espinhosObjetos').objects.forEach(obj => {
+      const espinho = this.add.rectangle(
+        obj.x + obj.width / 2,
+        obj.y + obj.height / 2,
+        obj.width,
+        obj.height
+      );
+      this.physics.add.existing(espinho);
+      espinho.body.setAllowGravity(false);
+      espinho.body.setImmovable(true);
+      espinho.setVisible(false);
+      this.espinhosObjetos.add(espinho);
+    });
+
+    this.physics.add.overlap(
+      this.personagemLocal,
+      this.espinhosObjetos,
+      () => {
+        if (!this.personagemLocal.isInvulnerable) {
+          this.somMorte.play();
+          this.tratarDano();
+        }
+      },
+      null,
+      this
+    );
+
+    this.createAnims()
+
+    this.bomba = this.physics.add.sprite(400, 225, 'bomba')
+    this.bomba.body.setAllowGravity(false)
+    this.bomba.setInteractive().on('pointerdown', () => {
+      this.bomba.play('bomba_anim'); // Corrigi aqui a animação da bomba
+    })
+    this.anims.create({
+      key: 'crystal_spin',
+      frames: this.anims.generateFrameNumbers('crystal', { start: 0, end: 3 }),
+      frameRate: 4,
+      repeat: -1
+    });
+
+    this.crystals = this.physics.add.group();
+
+    const crystalObjects = this.tilemapMapa.getObjectLayer('Crystals').objects;
+
+    crystalObjects.forEach(obj => {
+      const x = obj.x + (obj.width / 2 || 0);
+      const y = obj.y - (obj.height / 2 || 0) + 50;
+
+      const crystal = this.crystals.create(x, y, 'crystal');
+      crystal.body.setAllowGravity(false);
+      crystal.setImmovable(true);
+      crystal.play('crystal_spin');
+    });
+
+    this.physics.add.overlap(this.personagemLocal, this.crystals, this.coletarCristal, null, this);
+  }
+
+  coletarCristal (personagem, cristal) {
+    // Efeito no cristal
+    this.tweens.add({
+      targets: cristal,
+      alpha: 0,
+      scaleX: 1.5,
+      scaleY: 1.5,
+      duration: 300,
+      onComplete: () => {
+        cristal.destroy();
+        this.contadorCristais += 1;
+        console.log('Cristais Coletados:', this.contadorCristais);
+      }
+    });
+
+    // Efeito no personagem ao coletar o cristal
+    this.tweens.add({
+      targets: this.personagemLocal,
+      tint: 0x00ff00, // Cor verde
+      duration: 150,
+      onComplete: () => {
+        this.personagemLocal.clearTint(); // Restaura a cor original após o efeito
+      }
+    });
   }
 
   update () {
@@ -305,3 +355,4 @@ export default class fase1 extends Phaser.Scene {
     this.anims.create({ key: 'personagem-dano', frames: this.anims.generateFrameNumbers('fox', { start: 17, end: 18 }), frameRate: 6, repeat: 0 })
   }
 }
+

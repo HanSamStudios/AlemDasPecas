@@ -24,6 +24,10 @@ export default class precarregamento extends Phaser.Scene {
     this.load.audio('musica', 'assets/musica.mp3')
     this.load.plugin('rexvirtualjoystickplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexvirtualjoystickplugin.min.js', true)
     this.load.audio('morte', 'assets/morte.mp3')
+    this.load.spritesheet('crystal', 'assets/greencrystal.png', {
+      frameWidth: 64,
+      frameHeight: 64
+    });
     this.load.spritesheet('fox', 'Spritesheet.png', {
       frameWidth: 64,
       frameHeight: 64
