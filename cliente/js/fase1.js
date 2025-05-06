@@ -157,7 +157,7 @@ export default class fase1 extends Phaser.Scene {
     this.anims.create({
       key: 'crystal_spin',
       frames: this.anims.generateFrameNumbers('crystal', { start: 0, end: 3 }),
-      frameRate: 4,
+      frameRate: 6,
       repeat: -1
     });
 
@@ -179,7 +179,8 @@ export default class fase1 extends Phaser.Scene {
   }
 
   coletarCristal (personagem, cristal) {
-    // Efeito no cristal
+    cristal.body.checkCollision.none = true; // Evita múltiplas colisões
+
     this.tweens.add({
       targets: cristal,
       alpha: 0,
@@ -193,16 +194,16 @@ export default class fase1 extends Phaser.Scene {
       }
     });
 
-    // Efeito no personagem ao coletar o cristal
     this.tweens.add({
       targets: this.personagemLocal,
-      tint: 0x00ff00, // Cor verde
+      tint: 0x00ff00,
       duration: 150,
       onComplete: () => {
-        this.personagemLocal.clearTint(); // Restaura a cor original após o efeito
+        this.personagemLocal.clearTint();
       }
     });
   }
+
 
   update () {
     const angle = Phaser.Math.DegToRad(this.joystick.angle);
