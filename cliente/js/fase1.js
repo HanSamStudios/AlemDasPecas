@@ -26,12 +26,15 @@ export default class fase1 extends Phaser.Scene {
     this.load.image('flores', 'assets/mapa/flores.png')
     this.load.image('vaso', 'assets/mapa/vaso.png')
     this.load.image('espinhos', 'assets/mapa/espinhos.png')
+    this.load.audio('musica', 'assets/musica.mp3')
+    this.load.audio('morte', 'assets/morte.mp3')
     this.load.spritesheet('bomba', 'assets/mapa/bomba.png', { frameWidth: 8, frameHeight: 8 })
     this.load.spritesheet('fox', 'assets/Spritesheet.png', { frameWidth: 64, frameHeight: 64 })
     this.load.plugin('rexvirtualjoystickplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexvirtualjoystickplugin.min.js', true)
   }
 
   create () {
+    this.somMorte = this.sound.add('morte');
     this.input.addPointer(3)
     this.trailGroup = this.add.group()
     this.cameras.main.setBackgroundColor('#87ceeb')
@@ -85,6 +88,7 @@ export default class fase1 extends Phaser.Scene {
       this.espinhosObjetos,
       () => {
         if (!this.personagemLocal.isInvulnerable) {
+          this.somMorte.play();
           this.tratarDano();
         }
       },
@@ -224,7 +228,7 @@ export default class fase1 extends Phaser.Scene {
 
     if (this.jumpPressed && (this.personagemLocal.body.blocked.down || this.isWallGrabbing)) {
       if (this.isWallGrabbing) {
-        this.personagemLocal.setVelocityY(-175);
+        this.personagemLocal.setVelocityY(-170);
         this.ultimaParedeGrudada = this.ladoParedeAtual;
       } else {
         this.personagemLocal.setVelocityY(-300);

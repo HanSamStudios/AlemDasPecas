@@ -20,6 +20,8 @@ export default class precarregamento extends Phaser.Scene {
     this.load.image('espinhos', 'assets/mapa/espinhos.png')
     this.load.setPath('assets/')
     this.load.image('fundo', 'capa.png')
+    this.load.audio('musica', 'assets/musica.mp3')
+    this.load.audio('morte', 'assets/morte.mp3')
     this.load.spritesheet('fox', 'Spritesheet.png', {
       frameWidth: 64,
       frameHeight: 64
