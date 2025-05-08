@@ -3,7 +3,7 @@ export default class fase1 extends Phaser.Scene {
     super('fase1')
 
     this.threshold = 0.2
-    this.speed = 125
+    this.speed = 200
     this.isJumping = false
     this.direcaoAtual = 'direita'
     this.jumpPressed = false
