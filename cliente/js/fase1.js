@@ -26,6 +26,7 @@ export default class fase1 extends Phaser.Scene {
     this.load.image('chao', 'assets/mapa/chao.png')
     this.load.image('flores', 'assets/mapa/flores.png')
     this.load.image('jump', 'assets/jump.png')
+    this.load.image('repeat', 'assets/repeat.png')
     this.load.image('vaso', 'assets/mapa/vaso.png')
     this.load.image('espinhos', 'assets/mapa/espinhos.png')
     this.load.spritesheet('crystal', 'assets/greencrystal.png', {
@@ -81,6 +82,33 @@ export default class fase1 extends Phaser.Scene {
       base: this.add.circle(120, 360, 50, 0x888888).setScrollFactor(0),
       thumb: this.add.circle(120, 360, 25, 0xcccccc).setScrollFactor(0)
     })
+
+    this.botaoRespawn = this.add.image(750, 50, 'repeat')  // imagem do botão
+  .setScrollFactor(0)
+  .setInteractive()
+  .setDisplaySize(60, 60); // ajuste o tamanho conforme necessário
+
+// Efeito visual ao pressionar
+this.botaoRespawn.on('pointerdown', () => {
+  this.botaoRespawn.setDisplaySize(45, 45); // efeito de "apertado"
+  this.botaoRespawn.setTint(0x999999); // escurece o botão
+
+  this.personagemLocal.setPosition(this.spawnPoint.x, this.spawnPoint.y);
+  this.personagemLocal.setVelocity(0, 0);
+});
+
+// Restaura o botão ao soltar
+this.botaoRespawn.on('pointerup', () => {
+  this.botaoRespawn.setDisplaySize(60,60);
+  this.botaoRespawn.clearTint();
+});
+
+// Também restaura se o jogador mover o dedo/mouse para fora do botão
+this.botaoRespawn.on('pointerout', () => {
+  this.botaoRespawn.setDisplaySize(60,60);
+  this.botaoRespawn.clearTint();
+});
+
     // Substituindo o botão de pulo com a imagem 'jump'
     this.botaoPulo = this.add.image(715, 360, 'jump')  // Usando a imagem 'jump'
       .setScrollFactor(0)
@@ -96,7 +124,7 @@ export default class fase1 extends Phaser.Scene {
     });
 
 
-    this.botaoDash = this.add.image(635, 300, 'jump')  
+    this.botaoDash = this.add.image(635, 300, 'jump')
       .setScrollFactor(0)
       .setInteractive();
 
@@ -375,6 +403,22 @@ export default class fase1 extends Phaser.Scene {
     this.anims.create({ key: 'personagem-wallgrab', frames: this.anims.generateFrameNumbers('fox', { start: 21, end: 21 }), frameRate: 10, repeat: -1 })
     this.anims.create({ key: 'personagem-dash', frames: this.anims.generateFrameNumbers('fox', { start: 30, end: 33 }), frameRate: 20, repeat: 0 })
     this.anims.create({ key: 'personagem-dano', frames: this.anims.generateFrameNumbers('fox', { start: 17, end: 18 }), frameRate: 6, repeat: 0 })
+  }
+
+  resetarParaSpawn () {
+    this.personagemLocal.setPosition(this.spawnPoint.x, this.spawnPoint.y);
+    this.personagemLocal.setVelocity(0, 0);
+    this.personagemLocal.clearTint();
+    this.isDashing = false;
+    this.isWallGrabbing = false;
+    this.jumpPressed = false;
+    this.personagemLocal.isInvulnerable = false;
+
+    if (this.direcaoAtual === 'direita') {
+      this.personagemLocal.anims.play('personagem-parado-direita', true);
+    } else {
+      this.personagemLocal.anims.play('personagem-parado-esquerda', true);
+    }
   }
 }
 
