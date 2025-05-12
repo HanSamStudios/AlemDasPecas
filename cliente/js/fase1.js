@@ -26,6 +26,7 @@ export default class fase1 extends Phaser.Scene {
     this.load.image('chao', 'assets/mapa/chao.png')
     this.load.image('flores', 'assets/mapa/flores.png')
     this.load.image('jump', 'assets/jump.png')
+    this.load.image('back', 'assets/parallax/back.png')
     this.load.image('repeat', 'assets/repeat.png')
     this.load.image('vaso', 'assets/mapa/vaso.png')
     this.load.image('espinhos', 'assets/mapa/espinhos.png')
@@ -45,7 +46,6 @@ export default class fase1 extends Phaser.Scene {
     this.somMorte = this.sound.add('morte');
     this.input.addPointer(3)
     this.trailGroup = this.add.group()
-    this.cameras.main.setBackgroundColor('#87ceeb')
 
     this.tilemapMapa = this.make.tilemap({ key: 'mapa' })
     this.tilesetArvore = this.tilemapMapa.addTilesetImage('arvore')
@@ -53,15 +53,22 @@ export default class fase1 extends Phaser.Scene {
     this.tilesetVaso = this.tilemapMapa.addTilesetImage('vaso', null, 64, 64)
     this.tilesetEspinhos = this.tilemapMapa.addTilesetImage('espinhos')
     this.tilesetFlores = this.tilemapMapa.addTilesetImage('flores', null, 64, 32)
+    this.back = this.add.tileSprite(0,0, 800, 450, 'back')
+    this.back.setOrigin(0,0)
+    this.back.setScrollFactor(0)
 
     this.layerChao = this.tilemapMapa.createLayer('chao', [this.tilesetChao])
+      .setDepth(10)
     this.layerEspinhos = this.tilemapMapa.createLayer('espinhos', [this.tilesetEspinhos])
+      .setDepth(10)
     this.layerObjeto = this.tilemapMapa.createLayer('objeto', [this.tilesetFlores, this.tilesetVaso, this.tilesetArvore])
+      .setDepth(10)
 
     const spawnPoint = this.tilemapMapa.findObject("spawn", obj => obj.name === "spawn")
     this.spawnPoint = spawnPoint
 
     this.personagemLocal = this.physics.add.sprite(spawnPoint.x, spawnPoint.y, 'fox')
+      .setDepth(10)
     this.personagemLocal.body.setSize(40, 50)
     this.personagemLocal.body.setOffset(12, 14)
     this.personagemLocal.body.setGravityY(10)
@@ -79,11 +86,14 @@ export default class fase1 extends Phaser.Scene {
       x: 125,
       y: 350,
       radius: 50,
-      base: this.add.circle(120, 360, 50, 0x888888).setScrollFactor(0),
+      base: this.add.circle(120, 360, 50, 0x888888).setScrollFactor(0)
+        .setDepth(10),
       thumb: this.add.circle(120, 360, 25, 0xcccccc).setScrollFactor(0)
+        .setDepth(10)
     })
 
-    this.botaoRespawn = this.add.image(750, 50, 'repeat')  // imagem do botão
+    this.botaoRespawn = this.add.image(750, 50, 'repeat')
+      .setDepth(10)// imagem do botão
   .setScrollFactor(0)
   .setInteractive()
   .setDisplaySize(60, 60); // ajuste o tamanho conforme necessário
@@ -110,7 +120,8 @@ this.botaoRespawn.on('pointerout', () => {
 });
 
     // Substituindo o botão de pulo com a imagem 'jump'
-    this.botaoPulo = this.add.image(715, 360, 'jump')  // Usando a imagem 'jump'
+    this.botaoPulo = this.add.image(715, 360, 'jump')
+    .setDepth(10)// Usando a imagem 'jump'
       .setScrollFactor(0)
       .setInteractive();
 
@@ -125,6 +136,7 @@ this.botaoRespawn.on('pointerout', () => {
 
 
     this.botaoDash = this.add.image(635, 300, 'jump')
+      .setDepth(10)
       .setScrollFactor(0)
       .setInteractive();
 
@@ -249,6 +261,7 @@ this.botaoRespawn.on('pointerout', () => {
 
 
   update () {
+    this.back.tilePositionX = this.cameras.main.scrollX * .3
     const angle = Phaser.Math.DegToRad(this.joystick.angle);
     const force = this.joystick.force;
 
