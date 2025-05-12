@@ -25,6 +25,7 @@ export default class fase1 extends Phaser.Scene {
     this.load.image('arvore', 'assets/mapa/arvore.png')
     this.load.image('chao', 'assets/mapa/chao.png')
     this.load.image('flores', 'assets/mapa/flores.png')
+    this.load.image('jump', 'assets/jump.png')
     this.load.image('vaso', 'assets/mapa/vaso.png')
     this.load.image('espinhos', 'assets/mapa/espinhos.png')
     this.load.spritesheet('crystal', 'assets/greencrystal.png', {
@@ -80,45 +81,59 @@ export default class fase1 extends Phaser.Scene {
       base: this.add.circle(120, 360, 50, 0x888888).setScrollFactor(0),
       thumb: this.add.circle(120, 360, 25, 0xcccccc).setScrollFactor(0)
     })
+    // Substituindo o botão de pulo com a imagem 'jump'
+    this.botaoPulo = this.add.image(715, 360, 'jump')  // Usando a imagem 'jump'
+      .setScrollFactor(0)
+      .setInteractive();
 
-    this.botaoPulo = this.add.circle(680, 360, 35, 0x66ccff).setScrollFactor(0).setInteractive()
-    this.add.text(665, 348, 'A', { fontSize: '20px', fill: '#000' }).setScrollFactor(0)
+    // Ajustando o tamanho do botão
+    this.botaoPulo.setDisplaySize(100, 100); // Ajuste o tamanho conforme necessário
 
-    this.botaoDash = this.add.circle(740, 360, 35, 0xff6347).setScrollFactor(0).setInteractive()
-    this.add.text(730, 348, 'B', { fontSize: '20px', fill: '#000' }).setScrollFactor(0)
-
+    // Evento de pressionar o botão
     this.botaoPulo.on('pointerdown', () => {
-      if (this.personagemLocal.body.blocked.down || this.isWallGrabbing) {
-        this.jumpPressed = true
-      }
-    })
+    
+      this.jumpPressed = true;  // Flag de pulo ativada aqui.
+    });
 
+
+    this.botaoDash = this.add.image(635, 300, 'jump')  
+      .setScrollFactor(0)
+      .setInteractive();
+
+    this.botaoDash.setAngle(90);
+
+    // Ajustando o tamanho da imagem para o botão de dash
+    this.botaoDash.setDisplaySize(80, 80);  // Ajuste o tamanho conforme necessário
+
+
+    // Evento de pressionar o botão de dash
     this.botaoDash.on('pointerdown', () => {
+      // Lógica para o botão de dash (por exemplo, ativando o dash)
       if (!this.isDashing && this.canDash && (this.personagemLocal.body.blocked.down || this.canAirDash || this.isWallGrabbing)) {
-        this.isDashing = true
-        this.canDash = false
+        this.isDashing = true;
+        this.canDash = false;
 
-        if (this.isWallGrabbing) this.personagemLocal.setVelocityY(0)
-        if (!this.personagemLocal.body.blocked.down) this.canAirDash = false
+        if (this.isWallGrabbing) this.personagemLocal.setVelocityY(0);
+        if (!this.personagemLocal.body.blocked.down) this.canAirDash = false;
 
-        this.personagemLocal.setTint(0xffffff)
-        const dashVelX = this.personagemLocal.flipX ? -this.dashSpeed : this.dashSpeed
-        const dashVelY = 0
-        this.personagemLocal.setVelocity(dashVelX, dashVelY)
-        this.personagemLocal.anims.play('personagem-dash', true)
+        this.personagemLocal.setTint(0xffffff);
+        const dashVelX = this.personagemLocal.flipX ? -this.dashSpeed : this.dashSpeed;
+        const dashVelY = 0;
+        this.personagemLocal.setVelocity(dashVelX, dashVelY);
+        this.personagemLocal.anims.play('personagem-dash', true);
 
         this.time.delayedCall(150, () => {
-          this.isDashing = false
-          this.personagemLocal.clearTint()
-        })
+          this.isDashing = false;
+          this.personagemLocal.clearTint();
+        });
 
         this.time.delayedCall(this.dashCooldown, () => {
-          this.canDash = true
-        })
+          this.canDash = true;
+        });
 
-        this.isWallGrabbing = false
+        this.isWallGrabbing = false;
       }
-    })
+    });
 
     this.tilemapMapa.getObjectLayer('espinhosObjetos').objects.forEach(obj => {
       const espinho = this.add.rectangle(
@@ -279,16 +294,22 @@ export default class fase1 extends Phaser.Scene {
       }
     }
 
-    if (this.jumpPressed && (this.personagemLocal.body.blocked.down || this.isWallGrabbing)) {
-      if (this.isWallGrabbing) {
-        const impulsoX = this.ladoParedeAtual === 'left' ? 200 : -200;
-        this.personagemLocal.setVelocity(impulsoX, -230); // impulso lateral + pulo mais forte
-        this.ultimaParedeGrudada = this.ladoParedeAtual;
-      
-      } else {
-        this.personagemLocal.setVelocityY(-300);
+    if (this.jumpPressed) {
+      if (this.personagemLocal.body.blocked.down || this.isWallGrabbing) {
+        if (this.isWallGrabbing) {
+          const impulsoX = this.ladoParedeAtual === 'left' ? 200 : -200;
+          this.personagemLocal.setVelocity(impulsoX, -230);
+          this.ultimaParedeGrudada = this.ladoParedeAtual;
+        } else {
+          this.personagemLocal.setVelocityY(-300);
+        }
+
+        this.isJumping = true;
+        this.personagemLocal.anims.play('personagem-pulando', true);
+        this.isWallGrabbing = false;
       }
 
+      this.jumpPressed = false;
       this.isJumping = true;
       this.personagemLocal.anims.play('personagem-pulando', true);
       this.jumpPressed = false;
