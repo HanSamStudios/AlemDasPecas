@@ -27,7 +27,7 @@ export default class abertura extends Phaser.Scene {
             .on('pointerdown', () => {
                 this.botao.play('botao')
                 this.time.delayedCall(200, () => {
-                    this.scene.start('precarregamento');
+                    this.scene.start('sala');
                 })
             })
     }

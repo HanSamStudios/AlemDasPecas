@@ -18,6 +18,7 @@ export default class precarregamento extends Phaser.Scene {
     this.load.image('flores', 'assets/mapa/flores.png')
     this.load.image('vaso', 'assets/mapa/vaso.png')
     this.load.image('jump', 'assets/jump.png')
+    this.load.image('back', 'assets/parallax/back.png')
     this.load.image('repeat', 'assets/repeat.png')
     this.load.image('espinhos', 'assets/mapa/espinhos.png')
     this.load.setPath('assets/')

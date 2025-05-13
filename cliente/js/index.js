@@ -9,6 +9,15 @@ import finalperdeu from './final-perdeu.js'
 class Game extends Phaser.Game {
     constructor () {
         super(config)
+
+        this.socket = io()
+
+        this.socket.on("connect", () => {
+            console.log(`Usuário ${this.socket.id} conectado no servidor`)
+        })
+
+
+
         this.scene.add('abertura', abertura)
         this.scene.add('precarregamento', precarregamento)
         this.scene.add('sala', sala)
