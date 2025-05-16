@@ -27,6 +27,16 @@ io.on('connection', (socket) => {
     io.to(sala).emit("jogadores", jogadores)
   })
 
+  socket.on("offer", (sala, description) => { 
+    socket.to(sala).emit("offer", description)
+  })
+  socket.on("answer", (sala, description) => {
+    socket.to(sala).emit("answer", description)
+   })
+  socket.on("candidate", (sala, candidate) => { 
+    socket.to(sala).emit("candidate", candidate)
+  })
+
   socket.on('disconnect', (socket) => {
     console.log(`Usuário ${socket.id} desconectado do servidor`)
   })

@@ -25,9 +25,17 @@ export default class abertura extends Phaser.Scene {
         this.botao
             .setInteractive()
             .on('pointerdown', () => {
-                this.botao.play('botao')
-                this.time.delayedCall(200, () => {
-                    this.scene.start('sala');
+                navigator.mediaDevices
+                    .getUserMedia({ video: false, audio: true })
+                    .then((stream) => {
+                        this.game.midias = stream;
+                    })
+                    .catch((error) => {
+                    console.error("Erro ao acessar o microfone:", error)
+                    })
+            this.botao.play('botao')
+            this.time.delayedCall(200, () => {
+                this.scene.start('precarregamento');
                 })
             })
     }

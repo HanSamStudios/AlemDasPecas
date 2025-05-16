@@ -31,7 +31,11 @@ export default class precarregamento extends Phaser.Scene {
       frameWidth: 64,
       frameHeight: 64
     });
-    this.load.spritesheet('fox', 'Spritesheet.png', {
+    this.load.spritesheet('fox-laranja', 'Spritesheet.png', {
+      frameWidth: 64,
+      frameHeight: 64
+    })
+    this.load.spritesheet('fox-roxo', 'foxroxo.png', {
       frameWidth: 64,
       frameHeight: 64
     })
