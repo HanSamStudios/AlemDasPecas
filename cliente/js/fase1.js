@@ -71,7 +71,7 @@ export default class fase1 extends Phaser.Scene {
       volume: 3,
     });
     this.input.addPointer(3);
-    this.trailGroup = this.add.group();
+
 
     this.tilemapMapa = this.make.tilemap({ key: "mapa" });
 
@@ -499,9 +499,7 @@ export default class fase1 extends Phaser.Scene {
             this.personagemLocal.anims.play("personagem-parado-esquerda", true);
         }
       }
-    } else if (this.isDashing) {
-      this.createTrail();
-    }
+    } 
 
     const tileSize = this.tilemapMapa.tileWidth;
     const playerX = this.personagemLocal.x;
@@ -606,6 +604,7 @@ export default class fase1 extends Phaser.Scene {
         duration: 1000,
         ease: "Linear",
       });
+
     }
 
     if (!dentroZona && this.fundoAtual !== "back") {
@@ -653,31 +652,6 @@ export default class fase1 extends Phaser.Scene {
     });
   }
 
-  createTrail() {
-    const trail = this.add.sprite(
-      this.personagemLocal.x,
-      this.personagemLocal.y,
-      "fox"
-    );
-    trail.setAlpha(0.5);
-    trail.setDepth(-1);
-    trail.setFlipX(this.personagemLocal.flipX);
-    trail.setFrame(this.personagemLocal.anims.currentFrame.index);
-    trail.setTint(0x66ccff);
-
-    this.trailGroup.add(trail);
-
-    this.tweens.add({
-      targets: trail,
-      alpha: 0,
-      scale: { from: 1, to: 1.5 },
-      duration: 300,
-      ease: "Cubic.easeOut",
-      onComplete: () => {
-        trail.destroy();
-      },
-    });
-  }
 
   createAnims() {
     this.anims.create({
