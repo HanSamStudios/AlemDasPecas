@@ -34,7 +34,10 @@ export default class fase1 extends Phaser.Scene {
       frameWidth: 64,
       frameHeight: 64,
     });
-    this.load.audio("musica", "assets/musica.mp3");
+    this.load.audio("musicaa", "assets/musicaa.mp3");
+    this.load.audio("dashsound", "assets/dashsound.mp3");
+    this.load.audio("crystalsound", "assets/crystalsound.mp3");
+    this.load.audio("jumpsound", "assets/jumpsound.mp3");
     this.load.audio("morte", "assets/morte.mp3");
     this.load.image("fceu", "assets/ceu.jpg");
     this.load.spritesheet("bomba", "assets/mapa/bomba.png", {
@@ -57,8 +60,15 @@ export default class fase1 extends Phaser.Scene {
     );
   }
 
-  create() {
-    this.somMorte = this.sound.add("morte");
+  create () {
+    this.musica = this.sound.add('musicaa', {
+      loop: true,   // para repetir indefinidamente
+      volume: 0.5   // volume entre 0 e 1
+    });
+    this.musica.play();
+    this.somMorte = this.sound.add("morte", {
+      volume:3
+    });
     this.input.addPointer(3);
     this.trailGroup = this.add.group();
 
@@ -77,6 +87,11 @@ export default class fase1 extends Phaser.Scene {
     this.back = this.add.tileSprite(0, 0, 800, 450, "back");
     this.back.setOrigin(0, 0);
     this.back.setScrollFactor(0);
+    this.cavernaFundo = this.add
+      .image(0, 0, "fundo")
+      .setOrigin(0)
+      .setScrollFactor(0);
+    this.cavernaFundo.setVisible(false);
 
     this.layerChao = this.tilemapMapa
       .createLayer("chao", [this.tilesetChao])
@@ -135,16 +150,16 @@ export default class fase1 extends Phaser.Scene {
         .catch((error) => console.error("Ero ao criar resposta:", error))
       })
 
-      this.personagemLocal = this.physics.add.sprite(
-        spawnPoint.x,
-        spawnPoint.y,
-        "fox-primeiro"
-      );
-      this.personagemRemoto = this.add.sprite(
-        spawnPoint.x,
-        spawnPoint.y,
-        "fox-segundo"
-      );
+      this.personagemLocal = this.physics.add
+        .sprite(spawnPoint.x, spawnPoint.y, "fox-primeiro")
+        .setDepth(10);
+        this.personagemLocal.body.setSize(40, 50);
+        this.personagemLocal.body.setOffset(12, 14);
+        this.personagemLocal.body.setGravityY(10);
+        
+      
+      this.personagemRemoto = this.add
+        .sprite(spawnPoint.x, spawnPoint.y, "fox-segundo")
     } else if (this.game.jogadores.segundo == this.game.socket.id) {
       this.game.localConnection = new RTCPeerConnection(this.game.iceServers);
       this.game.dadosJogo = this.game.localConnection.createDataChannel(
@@ -152,16 +167,14 @@ export default class fase1 extends Phaser.Scene {
         { negotiated: true, id: 0 }
       );
 
-      this.personagemLocal = this.physics.add.sprite(
-        spawnPoint.x,
-        spawnPoint.y,
-        "fox-segundo"
-      );
-      this.personagemRemoto = this.add.sprite(
-        spawnPoint.x,
-        spawnPoint.y,
-        "fox-primeiro"
-      );
+      this.personagemLocal = this.physics.add
+        .sprite(spawnPoint.x, spawnPoint.y, "fox-segundo")
+        .setDepth(10);
+      this.personagemLocal.body.setSize(40, 50);
+      this.personagemLocal.body.setOffset(12, 14);
+      this.personagemLocal.body.setGravityY(10);
+      this.personagemRemoto = this.add
+        .sprite(spawnPoint.x, spawnPoint.y, "fox-primeiro")
     } else {
       window.alert("Jogador não encontrado");
       this.game.stop();
@@ -274,7 +287,7 @@ export default class fase1 extends Phaser.Scene {
 
         if (this.isWallGrabbing) this.personagemLocal.setVelocityY(0);
         if (!this.personagemLocal.body.blocked.down) this.canAirDash = false;
-
+        this.sound.play('dashsound')
         this.personagemLocal.setTint(0xffffff);
         const dashVelX = this.personagemLocal.flipX
           ? -this.dashSpeed
@@ -360,9 +373,31 @@ export default class fase1 extends Phaser.Scene {
       null,
       this
     );
-  }
+    this.checarUI = () => {
+      const elementosUI = [
+        { nome: "Joystick", objeto: this.joystick.base },
+        { nome: "Botão de Pulo", objeto: this.botaoPulo },
+        { nome: "Botão de Dash", objeto: this.botaoDash },
+        { nome: "Botão de Respawn", objeto: this.botaoRespawn },
+      ];
 
-  coletarCristal(personagem, cristal) {
+      elementosUI.forEach(({ nome, objeto }) => {
+        if (!objeto || !objeto.active || !objeto.visible) {
+          console.warn(`[ALERTA] ${nome} não foi criado corretamente.`);
+        } else {
+          console.log(`[OK] ${nome} visível e ativo.`);
+        }
+        this.time.delayedCall(1000, () => {
+          this.checarUI();
+        });
+      });
+    };
+    
+  }
+  
+
+  coletarCristal (personagem, cristal) {
+    this.sound.play('crystalsound');
     cristal.body.checkCollision.none = true; // Evita múltiplas colisões
 
     this.tweens.add({
@@ -493,9 +528,11 @@ export default class fase1 extends Phaser.Scene {
         if (this.isWallGrabbing) {
           const impulsoX = this.ladoParedeAtual === "left" ? 200 : -200;
           this.personagemLocal.setVelocity(impulsoX, -230);
+          this.sound.play("jumpsound");
           this.ultimaParedeGrudada = this.ladoParedeAtual;
         } else {
           this.personagemLocal.setVelocityY(-300);
+          this.sound.play("jumpsound");
         }
 
         this.isJumping = true;

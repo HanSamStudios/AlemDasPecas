@@ -97,8 +97,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":2786,
-                 "y":3672
+                 "x":2620.72348484848,
+                 "y":3686.96212121212
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -251,6 +251,39 @@
         }, 
         {
          "draworder":"topdown",
+         "id":16,
+         "name":"mudarfundo",
+         "objects":[
+                {
+                 "height":893.939393939394,
+                 "id":34,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":1075.75757575758,
+                 "x":2884.84848484848,
+                 "y":3454.54545454545
+                }, 
+                {
+                 "height":896.969696969697,
+                 "id":36,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":642.424242424242,
+                 "x":3590.90909090909,
+                 "y":3451.51515151515
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "draworder":"topdown",
          "id":14,
          "name":"espinhosObjetos",
          "objects":[
@@ -348,8 +381,8 @@
          "x":0,
          "y":0
         }],
- "nextlayerid":16,
- "nextobjectid":34,
+ "nextlayerid":17,
+ "nextobjectid":37,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.11.2",
