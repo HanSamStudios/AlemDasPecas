@@ -26,6 +26,7 @@ export default class fase1 extends Phaser.Scene {
     this.load.image("chao", "assets/mapa/chao.png");
     this.load.image("flores", "assets/mapa/flores.png");
     this.load.image("jump", "assets/jump.png");
+    this.load.image("fundo2", "assets/fundo2.png");
     this.load.image("back", "assets/parallax/back.png");
     this.load.image("repeat", "assets/repeat.png");
     this.load.image("vaso", "assets/mapa/vaso.png");
@@ -60,14 +61,14 @@ export default class fase1 extends Phaser.Scene {
     );
   }
 
-  create () {
-    this.musica = this.sound.add('musicaa', {
-      loop: true,   // para repetir indefinidamente
-      volume: 0.5   // volume entre 0 e 1
+  create() {
+    this.musica = this.sound.add("musicaa", {
+      loop: true, // para repetir indefinidamente
+      volume: 0.5, // volume entre 0 e 1
     });
     this.musica.play();
     this.somMorte = this.sound.add("morte", {
-      volume:3
+      volume: 3,
     });
     this.input.addPointer(3);
     this.trailGroup = this.add.group();
@@ -87,11 +88,21 @@ export default class fase1 extends Phaser.Scene {
     this.back = this.add.tileSprite(0, 0, 800, 450, "back");
     this.back.setOrigin(0, 0);
     this.back.setScrollFactor(0);
+    this.back.setAlpha(1);
+    this.fundo2 = this.add
+      .tileSprite(0, 0, this.scale.width, this.scale.height, "fundo2")
+      .setOrigin(0)
+      .setScrollFactor(0)
+      .setDepth(-10)
+      .setAlpha(0);
+    this.back.setDepth(-10);
     this.cavernaFundo = this.add
       .image(0, 0, "fundo")
       .setOrigin(0)
       .setScrollFactor(0);
-    this.cavernaFundo.setVisible(false);
+    this.cavernaFundo.setAlpha(0);
+
+    this.fundoAtual = "back";
 
     this.layerChao = this.tilemapMapa
       .createLayer("chao", [this.tilesetChao])
@@ -139,27 +150,29 @@ export default class fase1 extends Phaser.Scene {
           .then(() => this.game.remoteConnection.createAnswer())
           .then((answer) =>
             this.game.remoteConnection.setLocalDescription(answer)
-        )
+          )
           .then(() =>
             this.game.socket.emit(
               "answer",
               this.game.sala,
               this.game.remoteConnection.setLocalDescription
             )
-        )
-        .catch((error) => console.error("Ero ao criar resposta:", error))
-      })
+          )
+          .catch((error) => console.error("Ero ao criar resposta:", error));
+      });
 
       this.personagemLocal = this.physics.add
         .sprite(spawnPoint.x, spawnPoint.y, "fox-primeiro")
         .setDepth(10);
-        this.personagemLocal.body.setSize(40, 50);
-        this.personagemLocal.body.setOffset(12, 14);
-        this.personagemLocal.body.setGravityY(10);
-        
-      
-      this.personagemRemoto = this.add
-        .sprite(spawnPoint.x, spawnPoint.y, "fox-segundo")
+      this.personagemLocal.body.setSize(40, 50);
+      this.personagemLocal.body.setOffset(12, 14);
+      this.personagemLocal.body.setGravityY(10);
+
+      this.personagemRemoto = this.add.sprite(
+        spawnPoint.x,
+        spawnPoint.y,
+        "fox-segundo"
+      );
     } else if (this.game.jogadores.segundo == this.game.socket.id) {
       this.game.localConnection = new RTCPeerConnection(this.game.iceServers);
       this.game.dadosJogo = this.game.localConnection.createDataChannel(
@@ -173,8 +186,11 @@ export default class fase1 extends Phaser.Scene {
       this.personagemLocal.body.setSize(40, 50);
       this.personagemLocal.body.setOffset(12, 14);
       this.personagemLocal.body.setGravityY(10);
-      this.personagemRemoto = this.add
-        .sprite(spawnPoint.x, spawnPoint.y, "fox-primeiro")
+      this.personagemRemoto = this.add.sprite(
+        spawnPoint.x,
+        spawnPoint.y,
+        "fox-primeiro"
+      );
     } else {
       window.alert("Jogador não encontrado");
       this.game.stop();
@@ -287,7 +303,7 @@ export default class fase1 extends Phaser.Scene {
 
         if (this.isWallGrabbing) this.personagemLocal.setVelocityY(0);
         if (!this.personagemLocal.body.blocked.down) this.canAirDash = false;
-        this.sound.play('dashsound')
+        this.sound.play("dashsound");
         this.personagemLocal.setTint(0xffffff);
         const dashVelX = this.personagemLocal.flipX
           ? -this.dashSpeed
@@ -392,12 +408,37 @@ export default class fase1 extends Phaser.Scene {
         });
       });
     };
-    
-  }
-  
+    this.zonasDeFundo = this.physics.add.group({
+      allowGravity: false,
+      immovable: true,
+    });
 
-  coletarCristal (personagem, cristal) {
-    this.sound.play('crystalsound');
+    const zonas = this.tilemapMapa.getObjectLayer("Triggers").objects;
+
+    zonas.forEach((obj) => {
+      if (obj.name === "mudarFundo") {
+        const x = obj.x + obj.width / 2;
+        const y = obj.y + obj.height / 2;
+
+        this.zonaFundo = this.add.zone(x, y, obj.width, obj.height);
+        this.physics.add.existing(this.zonaFundo);
+        this.zonaFundo.body.setAllowGravity(false);
+        this.zonaFundo.body.setImmovable(true);
+      }
+    });
+/*
+    this.physics.add.overlap(
+      this.personagemLocal,
+      this.zonasDeFundo,
+      this.trocarFundo,
+      null,
+      this
+    );
+    */
+  }
+
+  coletarCristal(personagem, cristal) {
+    this.sound.play("crystalsound");
     cristal.body.checkCollision.none = true; // Evita múltiplas colisões
 
     this.tweens.add({
@@ -545,6 +586,42 @@ export default class fase1 extends Phaser.Scene {
       this.personagemLocal.anims.play("personagem-pulando", true);
       this.jumpPressed = false;
       this.isWallGrabbing = false;
+    }
+    const dentroZona = Phaser.Geom.Intersects.RectangleToRectangle(
+      this.personagemLocal.getBounds(),
+      this.zonaFundo.getBounds()
+    );
+
+    if (dentroZona && this.fundoAtual !== "fundo2") {
+      this.fundoAtual = "fundo2";
+      this.tweens.add({
+        targets: this.back,
+        alpha: 0,
+        duration: 1000,
+        ease: "Linear",
+      });
+      this.tweens.add({
+        targets: this.fundo2,
+        alpha: 1,
+        duration: 1000,
+        ease: "Linear",
+      });
+    }
+
+    if (!dentroZona && this.fundoAtual !== "back") {
+      this.fundoAtual = "back";
+      this.tweens.add({
+        targets: this.back,
+        alpha: 1,
+        duration: 1000,
+        ease: "Linear",
+      });
+      this.tweens.add({
+        targets: this.fundo2,
+        alpha: 0,
+        duration: 1000,
+        ease: "Linear",
+      });
     }
   }
 
@@ -697,6 +774,14 @@ export default class fase1 extends Phaser.Scene {
       this.personagemLocal.anims.play("personagem-parado-direita", true);
     } else {
       this.personagemLocal.anims.play("personagem-parado-esquerda", true);
+    }
+  }
+  trocarFundo(personagem, zona) {
+    if (zona.tipo === "mudarFundo") {
+      this.back.setTexture("fundo2");
+
+      // Opcional: remova a zona para que a troca ocorra só uma vez
+      zona.destroy();
     }
   }
 }

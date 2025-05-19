@@ -252,29 +252,29 @@
         {
          "draworder":"topdown",
          "id":16,
-         "name":"mudarfundo",
+         "name":"Triggers",
          "objects":[
                 {
-                 "height":893.939393939394,
-                 "id":34,
-                 "name":"",
+                 "height":1044,
+                 "id":37,
+                 "name":"mudarFundo",
                  "rotation":0,
                  "type":"",
                  "visible":true,
-                 "width":1075.75757575758,
-                 "x":2884.84848484848,
-                 "y":3454.54545454545
+                 "width":1408,
+                 "x":2876,
+                 "y":3308
                 }, 
                 {
-                 "height":896.969696969697,
-                 "id":36,
+                 "height":0,
+                 "id":39,
                  "name":"",
                  "rotation":0,
                  "type":"",
                  "visible":true,
-                 "width":642.424242424242,
-                 "x":3590.90909090909,
-                 "y":3451.51515151515
+                 "width":0,
+                 "x":3448,
+                 "y":3584
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -382,7 +382,7 @@
          "y":0
         }],
  "nextlayerid":17,
- "nextobjectid":37,
+ "nextobjectid":41,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.11.2",
