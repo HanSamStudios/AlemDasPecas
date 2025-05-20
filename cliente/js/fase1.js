@@ -238,10 +238,20 @@ export default class fase1 extends Phaser.Scene {
     }
 
     this.game.dadosJogo.onopen = () => {
-      console.log("Conexão de dados aberta!")
-    }
+      console.log("Conexão de dados aberta!");
+    };
+
+    this.game.dadosJogo.onmessage = (event) => {
+      const dados = JSON.parse(event.data);
+
+      if (dados.personagem) {
+        this.personagemRemoto.x = dados.personagem.x;
+        this.personagemRemoto.y = dados.personagem.y;
+        this.personagemRemoto.setFrame(dados.personagem.frame);
+      }
+    };
     // this.personagemLocal.setTint(0x800080);
-    /*andidate && 
+    /*candidate && 
   this.personagemLocal = this.physics.add.sprite(spawnPoint.x, spawnPoint.y, 'fox-primeiro')
   .setDepth(10)
   this.personagemLocal.body.setSize(40, 50)
@@ -664,6 +674,23 @@ export default class fase1 extends Phaser.Scene {
         duration: 1000,
         ease: "Linear",
       });
+    }
+    try {
+      if (this.game.dadosJogo.readyState === "open") {
+        if (this.personagemLocal) {
+          this.game.dadosJogo.send(
+            JSON.stringify({
+              personagem: {
+                x: this.personagemLocal.x,
+                y: this.personagemLocal.y,
+                frame: this.personagemLocal.frame.name,
+              },
+            }),
+          );
+        }
+      }
+    } catch (error) {
+      console.error(error);
     }
   }
 
