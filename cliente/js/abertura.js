@@ -7,7 +7,7 @@ export default class abertura extends Phaser.Scene {
 
     init(){ }
     preload () {
-        this.load.image('fundo', 'assets/capa.png')
+        this.load.image('capa', 'assets/capa.png')
         this.load.spritesheet('botao', 'assets/botao.png', {
             frameWidth: 250,
             frameHeight: 130
@@ -15,7 +15,7 @@ export default class abertura extends Phaser.Scene {
     }
 
     create () {
-        this.add.image(400, 225, 'fundo')
+        this.add.image(400, 225, 'capa')
         this.anims.create({
             key: 'botao',
             frames: this.anims.generateFrameNumbers('botao', { start: 0, end: 1 }),

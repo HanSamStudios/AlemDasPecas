@@ -1,3 +1,5 @@
+/*global Phaser*/
+/*eslint no-undef: "error"*/
 export default class fase1 extends Phaser.Scene {
   constructor() {
     super("fase1");
@@ -56,8 +58,8 @@ export default class fase1 extends Phaser.Scene {
     });
     this.load.plugin(
       "rexvirtualjoystickplugin",
-      "https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexvirtualjoystickplugin.min.js",
-      true
+      "./js/rexvirtualjoystickplugin.min.js",
+      true,
     );
   }
 
@@ -71,7 +73,6 @@ export default class fase1 extends Phaser.Scene {
       volume: 3,
     });
     this.input.addPointer(3);
-
 
     this.tilemapMapa = this.make.tilemap({ key: "mapa" });
 
@@ -135,8 +136,8 @@ export default class fase1 extends Phaser.Scene {
         this.game.socket.emit("candidate", this.game.sala, candidate);
       };
 
-      this.game.remoteConnection.ontrack = ({ streams: [track] }) => {
-        this.game.audio.srcObject = track;
+      this.game.remoteConnection.ontrack = ({ streams: [stream] }) => {
+        this.game.audio.srcObject = stream;
       };
 
       if (this.game.midias) {
@@ -155,11 +156,15 @@ export default class fase1 extends Phaser.Scene {
             this.game.socket.emit(
               "answer",
               this.game.sala,
-              this.game.remoteConnection.setLocalDescription
-            )
+              this.game.remoteConnection.localDescription,
+            ),
           )
-          .catch((error) => console.error("Ero ao criar resposta:", error));
+          .catch((error) => console.error("Erro ao criar resposta:", error));
       });
+      
+      this.game.socket.on("candidate", (candidate) => {
+        this.game.remoteConnection.addIceCandidate(candidate)
+      })
 
       this.personagemLocal = this.physics.add
         .sprite(spawnPoint.x, spawnPoint.y, "fox-primeiro")
@@ -180,6 +185,41 @@ export default class fase1 extends Phaser.Scene {
         { negotiated: true, id: 0 }
       );
 
+      this.game.localConnection.onicecandidate = ({candidate}) => {
+        this.game.socket.emit("candidate", this.game.sala, candidate)
+      }
+
+      this.game.localConnection.ontrack = ({ streams: [stream] }) => {
+        this.game.audio.srcObject = stream;
+      };
+      
+      if (this.game.midias) {
+        this.game.midias
+          .getTracks()
+          .forEach((track) =>
+            this.game.localConnection.addTrack(track, this.game.midias)
+          );
+      }
+
+      this.game.localConnection
+        .createOffer()
+        .then((offer) => this.game.localConnection.setLocalDescription(offer))
+        .then(() =>
+          this.game.socket.emit(
+            "offer",
+            this.game.sala,
+            this.game.localConnection.localDescription
+          )
+        );
+
+      this.game.socket.on("answer", (description) => {
+        this.game.localConnection.setRemoteDescription(description);
+      });
+
+      this.game.socket.on("candidate", (candidate) => {
+        this.game.localConnection.addIceCandidate(candidate);
+      });
+
       this.personagemLocal = this.physics.add
         .sprite(spawnPoint.x, spawnPoint.y, "fox-segundo")
         .setDepth(10);
@@ -192,9 +232,13 @@ export default class fase1 extends Phaser.Scene {
         "fox-primeiro"
       );
     } else {
-      window.alert("Jogador não encontrado");
+      window.alert("JSala");
       this.game.stop();
-      this.game.start("abertura");
+      this.game.start("sala");
+    }
+
+    this.game.dadosJogo.onopen = () => {
+      console.log("Conexão de dados aberta!")
     }
     // this.personagemLocal.setTint(0x800080);
     /*andidate && 
@@ -426,7 +470,7 @@ export default class fase1 extends Phaser.Scene {
         this.zonaFundo.body.setImmovable(true);
       }
     });
-/*
+    /*
     this.physics.add.overlap(
       this.personagemLocal,
       this.zonasDeFundo,
@@ -499,7 +543,7 @@ export default class fase1 extends Phaser.Scene {
             this.personagemLocal.anims.play("personagem-parado-esquerda", true);
         }
       }
-    } 
+    }
 
     const tileSize = this.tilemapMapa.tileWidth;
     const playerX = this.personagemLocal.x;
@@ -604,7 +648,6 @@ export default class fase1 extends Phaser.Scene {
         duration: 1000,
         ease: "Linear",
       });
-
     }
 
     if (!dentroZona && this.fundoAtual !== "back") {
@@ -651,7 +694,6 @@ export default class fase1 extends Phaser.Scene {
       }
     });
   }
-
 
   createAnims() {
     this.anims.create({
