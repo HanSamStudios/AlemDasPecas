@@ -29,6 +29,7 @@ export default class fase1 extends Phaser.Scene {
     this.load.image("flores", "assets/mapa/flores.png");
     this.load.image("jump", "assets/jump.png");
     this.load.image("fundo2", "assets/fundo2.png");
+    this.load.image("casa", "assets/mapa/casa.png");
     this.load.image("back", "assets/parallax/back.png");
     this.load.image("repeat", "assets/repeat.png");
     this.load.image("vaso", "assets/mapa/vaso.png");
@@ -76,7 +77,7 @@ export default class fase1 extends Phaser.Scene {
 
     this.tilemapMapa = this.make.tilemap({ key: "mapa" });
 
-    this.tilesetArvore = this.tilemapMapa.addTilesetImage("arvore");
+    this.tilesetCasa = this.tilemapMapa.addTilesetImage("casa");
     this.tilesetChao = this.tilemapMapa.addTilesetImage("chao", null, 64, 64);
     this.tilesetVaso = this.tilemapMapa.addTilesetImage("vaso", null, 64, 64);
     this.tilesetEspinhos = this.tilemapMapa.addTilesetImage("espinhos");
@@ -111,6 +112,14 @@ export default class fase1 extends Phaser.Scene {
     this.layerEspinhos = this.tilemapMapa
       .createLayer("espinhos", [this.tilesetEspinhos])
       .setDepth(10);
+    this.tilemapMapa.getObjectLayer("casa").objects.forEach((obj) => {
+      this.add
+        .image(obj.x, obj.y, "casa")
+        .setOrigin(0, 1)
+        .setDepth(5)
+        .setFlipX(true)
+        .setScale(1.5);
+      });
     this.layerObjeto = this.tilemapMapa
       .createLayer("objeto", [
         this.tilesetFlores,
@@ -124,6 +133,10 @@ export default class fase1 extends Phaser.Scene {
       (obj) => obj.name === "spawn"
     );
     this.spawnPoint = spawnPoint;
+
+    this.tilemapMapa.getObjectLayer("casa").objects.forEach((obj) => {
+      this.add.image(obj.x, obj.y, "casa").setOrigin(0, 1); // Origem na base
+    });
 
     if (this.game.jogadores.primeiro == this.game.socket.id) {
       this.game.remoteConnection = new RTCPeerConnection(this.game.iceServers);
@@ -177,7 +190,7 @@ export default class fase1 extends Phaser.Scene {
         spawnPoint.x,
         spawnPoint.y,
         "fox-segundo"
-      );
+      ).setDepth(6);
     } else if (this.game.jogadores.segundo == this.game.socket.id) {
       this.game.localConnection = new RTCPeerConnection(this.game.iceServers);
       this.game.dadosJogo = this.game.localConnection.createDataChannel(
@@ -230,7 +243,7 @@ export default class fase1 extends Phaser.Scene {
         spawnPoint.x,
         spawnPoint.y,
         "fox-primeiro"
-      );
+      ).setDepth(6);
     } else {
       window.alert("JSala");
       this.game.stop();
