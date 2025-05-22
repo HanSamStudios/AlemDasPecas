@@ -359,12 +359,11 @@ export default class fase1 extends Phaser.Scene {
         if (!this.personagemLocal.body.blocked.down) this.canAirDash = false;
         this.sound.play("dashsound");
         this.personagemLocal.setTint(0xffffff);
-        const dashVelX = this.personagemLocal.flipX
-          ? -this.dashSpeed
-          : this.dashSpeed;
+        const dashVelX =
+          this.direcaoAtual === "esquerda" ? -this.dashSpeed : this.dashSpeed;
         const dashVelY = 0;
         this.personagemLocal.setVelocity(dashVelX, dashVelY);
-        this.personagemLocal.anims.play("personagem-dash", true);
+        this.personagemLocal.anims.play("personagem-dash-direita", true);
 
         this.time.delayedCall(150, () => {
           this.isDashing = false;
@@ -531,12 +530,10 @@ export default class fase1 extends Phaser.Scene {
         this.personagemLocal.setVelocityX(velocityX);
 
         if (velocityX > 0) {
-          this.personagemLocal.setFlipX(false);
           if (!this.isJumping)
             this.personagemLocal.anims.play("personagem-andando-direita", true);
           this.direcaoAtual = "direita";
         } else {
-          this.personagemLocal.setFlipX(true);
           if (!this.isJumping)
             this.personagemLocal.anims.play(
               "personagem-andando-esquerda",
@@ -586,20 +583,35 @@ export default class fase1 extends Phaser.Scene {
           this.personagemLocal.body.setGravityY(300);
           this.personagemLocal.setVelocityY(2);
 
-          this.personagemLocal.anims.play("personagem-wallgrab", true);
+          const wallGrabAnim =
+            this.direcaoAtual === "direita"
+              ? "personagem-wallgrab-direita"
+              : "personagem-wallgrab-esquerda";
+          this.personagemLocal.anims.play(wallGrabAnim, true);
+
           this.isWallGrabbing = true;
           this.isJumping = true;
           this.ladoParedeAtual = ladoAtual;
         }
       } else if (this.personagemLocal.body.velocity.y < 0) {
-        this.personagemLocal.anims.play("personagem-pulando", true);
+        const jumpAnim =
+          this.direcaoAtual === "direita"
+            ? "personagem-pulando-direita"
+            : "personagem-pulando-esquerda";
+        this.personagemLocal.anims.play(jumpAnim, true);
+
         this.isWallGrabbing = false;
         this.isJumping = true;
       } else if (
         this.personagemLocal.body.velocity.y > 0 &&
         !this.isWallGrabbing
       ) {
-        this.personagemLocal.anims.play("personagem-caindo", true);
+        const fallAnim =
+          this.direcaoAtual === "direita"
+            ? "personagem-caindo-direita"
+            : "personagem-caindo-esquerda";
+        this.personagemLocal.anims.play(fallAnim, true);
+
         this.isJumping = true;
       }
     } else {
@@ -615,7 +627,6 @@ export default class fase1 extends Phaser.Scene {
         );
       }
     }
-
     if (this.jumpPressed) {
       if (this.personagemLocal.body.blocked.down || this.isWallGrabbing) {
         if (this.isWallGrabbing) {
@@ -627,18 +638,26 @@ export default class fase1 extends Phaser.Scene {
           this.personagemLocal.setVelocityY(-300);
           this.sound.play("jumpsound");
         }
-
+    
         this.isJumping = true;
-        this.personagemLocal.anims.play("personagem-pulando", true);
+        const jumpAnim =
+          this.direcaoAtual === "direita"
+            ? "personagem-pulando-direita"
+            : "personagem-pulando-esquerda";
+        this.personagemLocal.anims.play(jumpAnim, true);
         this.isWallGrabbing = false;
       }
-
+    
       this.jumpPressed = false;
       this.isJumping = true;
-      this.personagemLocal.anims.play("personagem-pulando", true);
-      this.jumpPressed = false;
+      const jumpAnim =
+        this.direcaoAtual === "direita"
+          ? "personagem-pulando-direita"
+          : "personagem-pulando-esquerda";
+      this.personagemLocal.anims.play(jumpAnim, true);
       this.isWallGrabbing = false;
     }
+
     const dentroZona = Phaser.Geom.Intersects.RectangleToRectangle(
       this.personagemLocal.getBounds(),
       this.zonaFundo.getBounds()
@@ -736,7 +755,7 @@ export default class fase1 extends Phaser.Scene {
       key: "personagem-andando-esquerda",
       frames: this.anims.generateFrameNumbers(
         this.personagemLocal.texture.key,
-        { start: 3, end: 9 }
+        { start: 39, end: 45 }
       ),
       frameRate: 10,
       repeat: -1,
@@ -753,12 +772,12 @@ export default class fase1 extends Phaser.Scene {
       key: "personagem-parado-esquerda",
       frames: this.anims.generateFrameNumbers(
         this.personagemLocal.texture.key,
-        { start: 1, end: 1 }
+        { start: 36, end: 36 }
       ),
       frameRate: 1,
     });
     this.anims.create({
-      key: "personagem-pulando",
+      key: "personagem-pulando-direita",
       frames: this.anims.generateFrameNumbers(
         this.personagemLocal.texture.key,
         { start: 19, end: 19 }
@@ -767,7 +786,16 @@ export default class fase1 extends Phaser.Scene {
       repeat: -1,
     });
     this.anims.create({
-      key: "personagem-caindo",
+      key: "personagem-pulando-esquerda",
+      frames: this.anims.generateFrameNumbers(
+        this.personagemLocal.texture.key,
+        { start: 55, end: 55 }
+      ),
+      frameRate: 10,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "personagem-caindo-direita",
       frames: this.anims.generateFrameNumbers(
         this.personagemLocal.texture.key,
         { start: 20, end: 20 }
@@ -776,7 +804,16 @@ export default class fase1 extends Phaser.Scene {
       repeat: -1,
     });
     this.anims.create({
-      key: "personagem-wallgrab",
+      key: "personagem-caindo-esquerda",
+      frames: this.anims.generateFrameNumbers(
+        this.personagemLocal.texture.key,
+        { start: 56, end: 56 }
+      ),
+      frameRate: 10,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "personagem-wallgrab-direita",
       frames: this.anims.generateFrameNumbers(
         this.personagemLocal.texture.key,
         { start: 21, end: 21 }
@@ -785,10 +822,28 @@ export default class fase1 extends Phaser.Scene {
       repeat: -1,
     });
     this.anims.create({
-      key: "personagem-dash",
+      key: "personagem-wallgrab-esquerda",
+      frames: this.anims.generateFrameNumbers(
+        this.personagemLocal.texture.key,
+        { start: 57, end: 57 }
+      ),
+      frameRate: 10,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "personagem-dash-direita",
       frames: this.anims.generateFrameNumbers(
         this.personagemLocal.texture.key,
         { start: 30, end: 33 }
+      ),
+      frameRate: 20,
+      repeat: 0,
+    });
+    this.anims.create({
+      key: "personagem-dash-esquerda",
+      frames: this.anims.generateFrameNumbers(
+        this.personagemLocal.texture.key,
+        { start: 66, end: 69}
       ),
       frameRate: 20,
       repeat: 0,
