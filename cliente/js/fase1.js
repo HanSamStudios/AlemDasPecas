@@ -491,7 +491,7 @@ export default class fase1 extends Phaser.Scene {
     
     this.cristal.forEach((cristal) => {
       cristal.objeto = this.physics.add.sprite(cristal.x - 100, cristal.y, "crystal")
-      cristal.objeto.play("crystal")
+      cristal.objeto.play("crystal_spin")
       this.physics.add.collider(cristal.objeto, this.layerChao)
       this.physics.add.overlap(this.personagemLocal,
         cristal.objeto,
@@ -503,28 +503,6 @@ export default class fase1 extends Phaser.Scene {
       )
          
     })
-
-    this.crystals = this.physics.add.group();
-
-    const crystalObjects = this.tilemapMapa.getObjectLayer("Crystals").objects;
-
-    crystalObjects.forEach((obj) => {
-      const x = obj.x + (obj.width / 2 || 0);
-      const y = obj.y - (obj.height / 2 || 0) + 50;
-
-      const crystal = this.crystals.create(x, y, "crystal");
-      crystal.body.setAllowGravity(false);
-      crystal.setImmovable(true);
-      crystal.play("crystal_spin");
-    });
-
-    this.physics.add.overlap(
-      this.personagemLocal,
-      this.crystals,
-      this.coletarCristal,
-      null,
-      this
-    );
     this.checarUI = () => {
       const elementosUI = [
         { nome: "Joystick", objeto: this.joystick.base },
@@ -571,34 +549,6 @@ export default class fase1 extends Phaser.Scene {
       this
     );
     */
-  }
-
-  coletarCristal (personagem, cristal) {
-    this.sound.play("crystalsound");
-    cristal.body.checkCollision.none = true; // Evita múltiplas colisões
-
-    this.tweens.add({
-      targets: cristal,
-      alpha: 0,
-      scaleX: 1.5,
-      scaleY: 1.5,
-      duration: 300,
-      onComplete: () => {
-        cristal.setVisible(false);
-        cristal.body.enable = false;
-        this.contadorCristais += 1;
-        console.log("Cristais Coletados:", this.contadorCristais);
-      },
-    });
-
-    this.tweens.add({
-      targets: this.personagemLocal,
-      tint: 0x00ff00,
-      duration: 150,
-      onComplete: () => {
-        this.personagemLocal.clearTint();
-      },
-    });
   }
 
   update () {
@@ -828,25 +778,7 @@ export default class fase1 extends Phaser.Scene {
         }
       }
     });
-    
-          
-    /*try {
-      if (this.game.dadosJogo.readyState === "open") {
-        if (this.personagemLocal && this.gatos) {
-          this.game.dadosJogo.send(
-            JSON.stringify({
-              personagem: {
-                x: this.personagemLocal.x,
-                y: this.personagemLocal.y,
-                frame: this.personagemLocal.frame.name,
-              },
-              cristal: this.cristal.map(cristal => (cristal => ({ cristal: cristal.objeto.visible }))(cristal)),
-            })
-          )
-        }
-      }
-    }
-  } */
+  
   }
 
 
