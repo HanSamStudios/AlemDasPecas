@@ -29,12 +29,17 @@ export default class fase1 extends Phaser.Scene {
     this.load.image("flores", "assets/mapa/flores.png");
     this.load.image("jump", "assets/jump.png");
     this.load.image("fundo2", "assets/fundo2.png");
+    this.load.image("coracao", "assets/coracao.png");
     this.load.image("casa", "assets/mapa/casa.png");
     this.load.image("back", "assets/parallax/back.png");
     this.load.image("repeat", "assets/repeat.png");
     this.load.image("vaso", "assets/mapa/vaso.png");
     this.load.image("espinhos", "assets/mapa/espinhos.png");
     this.load.spritesheet("crystal", "assets/greencrystal.png", {
+      frameWidth: 64,
+      frameHeight: 64,
+    });
+    this.load.spritesheet("dano", "assets/perde.png", {
       frameWidth: 64,
       frameHeight: 64,
     });
@@ -253,20 +258,39 @@ export default class fase1 extends Phaser.Scene {
 
     this.game.dadosJogo.onmessage = (event) => {
       const dados = JSON.parse(event.data);
-
       if (dados.personagem) {
         this.personagemRemoto.x = dados.personagem.x;
         this.personagemRemoto.y = dados.personagem.y;
         this.personagemRemoto.setFrame(dados.personagem.frame);
       }
-      if (dados.cristal) {
-        this.cristal.forEach((gato, i) => {
-          if (!dados.cristal[i].visible) {
-            gato.objeto.disableBody(true, true)
-          }
-        })
-      };
+      if (dados.vidas !== undefined) {
+        this.vidas = dados.vidas;
+        this.atualizarCoracoes();
+    
+        // Se a vida chegou a zero pelo dado recebido, finalize localmente
+        if (this.vidas <= 0) {
+          this.scene.start("abertura")
+          // Aqui desative controles, etc, se precisar
+        }
+      }
+      if (dados.gameOver) {
+        this.scene.start("abertura")
+      }
+    
 
+      if (dados.cristal) {
+        this.cristal.forEach((cristal, i) => {
+          if (dados.cristal[i].visivel) {
+            // Reativa o cristal se visível
+            cristal.objeto.enableBody(false, cristal.x, cristal.y, true, true);
+            cristal.objeto.setAlpha(1);
+            cristal.objeto.setScale(1);
+          } else {
+            // Desativa o cristal se não visível
+            cristal.objeto.disableBody(true, true);
+          }
+        });
+      }
     };
     // this.personagemLocal.setTint(0x800080);
     /*candidate && 
@@ -472,6 +496,38 @@ export default class fase1 extends Phaser.Scene {
       this
     );
 
+    // Variáveis para vida
+    this.vidas = 3;
+    this.coracoes = [];
+
+    // Cria 3 corações no canto superior esquerdo
+    this.coracoes = [];
+    this.animacoesDano = [];
+
+    for (let i = 0; i < 3; i++) {
+      const x = 30 + i * 38;
+      const y = 20;
+
+      // Coração visível
+      const coracao = this.add
+        .image(x, y, "coracao")
+        .setScrollFactor(0)
+        .setDepth(1000)
+        .setScale(0.5);
+
+      this.coracoes.push(coracao);
+
+      // Sprite para animação de dano (inicialmente invisível)
+      const animDano = this.add
+        .sprite(x, y, "dano")
+        .setScrollFactor(0)
+        .setVisible(false)
+        .setDepth(1000)
+        .setScale(0.5);
+
+      this.animacoesDano.push(animDano);
+    }
+
     this.createAnims();
 
     this.bomba = this.physics.add.sprite(400, 225, "bomba");
@@ -489,16 +545,18 @@ export default class fase1 extends Phaser.Scene {
     this.cristal = [
       { x: -501.15, y: 3898.24 },
       { x: 1377.64, y: 3507.33 },
-      { x: 3214.00, y: 4137.64 },
-      { x: 4456.42, y: 3604.30 },
-    {x: 6538.24, y: 4334.61}];
-    
+      { x: 3214.0, y: 4137.64 },
+      { x: 4456.42, y: 3604.3 },
+      { x: 6538.24, y: 4334.61 },
+    ];
+
     this.cristal.forEach((cristal) => {
-      cristal.objeto = this.physics.add.sprite(cristal.x, cristal.y, "crystal")
+      cristal.objeto = this.physics.add.sprite(cristal.x, cristal.y, "crystal");
       cristal.objeto.body.setAllowGravity(false);
-      cristal.objeto.play("crystal_spin")
-      this.physics.add.collider(cristal.objeto, this.layerChao)
-      this.physics.add.overlap(this.personagemLocal,
+      cristal.objeto.play("crystal_spin");
+      this.physics.add.collider(cristal.objeto, this.layerChao);
+      this.physics.add.overlap(
+        this.personagemLocal,
         cristal.objeto,
         (personagem, cristal) => {
           this.tweens.add({
@@ -510,7 +568,7 @@ export default class fase1 extends Phaser.Scene {
               cristal.disableBody(true, true);
             },
           });
-          this.sound.play("crystalsound")
+          this.sound.play("crystalsound");
           this.pontuacao += 1;
           const rainbowColors = [
             0xff0000, // vermelho
@@ -542,9 +600,8 @@ export default class fase1 extends Phaser.Scene {
         },
         null,
         this
-      )
-         
-    })
+      );
+    });
     this.checarUI = () => {
       const elementosUI = [
         { nome: "Joystick", objeto: this.joystick.base },
@@ -820,19 +877,52 @@ export default class fase1 extends Phaser.Scene {
         }
       }
     });
-  
   }
 
-
-  tratarDano() {
+  tratarDano () {
     if (this.personagemLocal.isInvulnerable) return;
+    this.levandoDano = true;
 
+    // Diminuir vida ao tomar dano
+    if (this.vidas > 0) {
+      this.vidas--;
+
+      // Esconder o coração perdido
+      if (this.coracoes[this.vidas]) {
+        this.coracoes[this.vidas].setVisible(false);
+      }
+
+      // Mostrar animação de dano no mesmo lugar do coração perdido
+      if (this.animacoesDano[this.vidas]) {
+        const animDano = this.animacoesDano[this.vidas];
+        animDano.setVisible(true);
+        animDano.anims.play("dano");
+
+        // Quando a animação terminar, esconder o sprite
+        animDano.on(
+          "animationcomplete",
+          () => {
+            animDano.setVisible(false);
+          },
+          this
+        );
+      }
+    }
+
+    if (this.vidas <= 0) {
+      this.atualizarVidas();
+      this.scene.start("abertura");
+      return;
+    }
+    this.atualizarVidas();
+
+    // Continua com o efeito de dano e invulnerabilidade
     this.personagemLocal.isInvulnerable = true;
     this.personagemLocal.setVelocity(0, 0);
     this.personagemLocal.anims.play("personagem-dano", true);
     this.personagemLocal.setTint(0xff7f7f);
 
-    const knockback = this.personagemLocal ? 150 : -150;
+    const knockback = this.direcaoAtual === "direita" ? -150 : 150; // Ajustei para bater pra trás
     this.personagemLocal.setVelocity(knockback, -200);
 
     this.isDashing = true;
@@ -852,7 +942,7 @@ export default class fase1 extends Phaser.Scene {
     });
   }
 
-  createAnims() {
+  createAnims () {
     this.anims.create({
       key: "personagem-andando-direita",
       frames: this.anims.generateFrameNumbers(
@@ -965,12 +1055,18 @@ export default class fase1 extends Phaser.Scene {
         this.personagemLocal.texture.key,
         { start: 17, end: 18 }
       ),
+      frameRate: 4,
+      repeat: 0,
+    });
+    this.anims.create({
+      key: "dano",
+      frames: this.anims.generateFrameNumbers("dano", { start: 0, end: 3 }),
       frameRate: 6,
       repeat: 0,
     });
   }
 
-  resetarParaSpawn() {
+  resetarParaSpawn () {
     this.personagemLocal.setPosition(this.spawnPoint.x, this.spawnPoint.y);
     this.personagemLocal.setVelocity(0, 0);
     this.personagemLocal.clearTint();
@@ -985,7 +1081,7 @@ export default class fase1 extends Phaser.Scene {
       this.personagemLocal.anims.play("personagem-parado-esquerda", true);
     }
   }
-  trocarFundo(personagem, zona) {
+  trocarFundo (personagem, zona) {
     if (zona.tipo === "mudarFundo") {
       this.back.setTexture("fundo2");
 
@@ -993,7 +1089,7 @@ export default class fase1 extends Phaser.Scene {
       zona.destroy();
     }
   }
-  matarJogador() {
+  matarJogador () {
     console.log("Jogador morreu! Voltando para o respawn...");
 
     // Reseta a posição para o spawnPoint
@@ -1009,6 +1105,26 @@ export default class fase1 extends Phaser.Scene {
 
     // Pode também tocar algum som ou animação de "morte" antes de voltar
     // this.sound.play("deathSound");
+  }
+  atualizarCoracoes () {
+    for (let i = 0; i < this.coracoes.length; i++) {
+      if (i < this.vidas) {
+        this.coracoes[i].setVisible(true);
+      } else {
+        this.coracoes[i].setVisible(false);
+      }
+    }
+  }
+  atualizarVidas () {
+    this.atualizarCoracoes();
+  
+    if (this.game.dadosJogo && this.game.dadosJogo.readyState === "open") {
+      // Enviar as vidas atuais e se o jogo acabou
+      this.game.dadosJogo.send(JSON.stringify({
+        vidas: this.vidas,
+        gameOver: this.vidas <= 0
+      }));
+    }
   }
 }
 
