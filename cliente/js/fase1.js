@@ -60,11 +60,12 @@ export default class fase1 extends Phaser.Scene {
     this.load.plugin(
       "rexvirtualjoystickplugin",
       "./js/rexvirtualjoystickplugin.min.js",
-      true,
+      true
     );
   }
 
   create() {
+    this.physics.world.createDebugGraphic();
     this.musica = this.sound.add("musicaa", {
       loop: true, // para repetir indefinidamente
       volume: 0.5, // volume entre 0 e 1
@@ -119,7 +120,7 @@ export default class fase1 extends Phaser.Scene {
         .setDepth(5)
         .setFlipX(true)
         .setScale(1.5);
-      });
+    });
     this.layerObjeto = this.tilemapMapa
       .createLayer("objeto", [
         this.tilesetFlores,
@@ -169,15 +170,15 @@ export default class fase1 extends Phaser.Scene {
             this.game.socket.emit(
               "answer",
               this.game.sala,
-              this.game.remoteConnection.localDescription,
-            ),
+              this.game.remoteConnection.localDescription
+            )
           )
           .catch((error) => console.error("Erro ao criar resposta:", error));
       });
-      
+
       this.game.socket.on("candidate", (candidate) => {
-        this.game.remoteConnection.addIceCandidate(candidate)
-      })
+        this.game.remoteConnection.addIceCandidate(candidate);
+      });
 
       this.personagemLocal = this.physics.add
         .sprite(spawnPoint.x, spawnPoint.y, "fox-primeiro")
@@ -186,11 +187,9 @@ export default class fase1 extends Phaser.Scene {
       this.personagemLocal.body.setOffset(12, 14);
       this.personagemLocal.body.setGravityY(10);
 
-      this.personagemRemoto = this.add.sprite(
-        spawnPoint.x,
-        spawnPoint.y,
-        "fox-segundo"
-      ).setDepth(6);
+      this.personagemRemoto = this.add
+        .sprite(spawnPoint.x, spawnPoint.y, "fox-segundo")
+        .setDepth(6);
     } else if (this.game.jogadores.segundo == this.game.socket.id) {
       this.game.localConnection = new RTCPeerConnection(this.game.iceServers);
       this.game.dadosJogo = this.game.localConnection.createDataChannel(
@@ -198,14 +197,14 @@ export default class fase1 extends Phaser.Scene {
         { negotiated: true, id: 0 }
       );
 
-      this.game.localConnection.onicecandidate = ({candidate}) => {
-        this.game.socket.emit("candidate", this.game.sala, candidate)
-      }
+      this.game.localConnection.onicecandidate = ({ candidate }) => {
+        this.game.socket.emit("candidate", this.game.sala, candidate);
+      };
 
       this.game.localConnection.ontrack = ({ streams: [stream] }) => {
         this.game.audio.srcObject = stream;
       };
-      
+
       if (this.game.midias) {
         this.game.midias
           .getTracks()
@@ -239,11 +238,9 @@ export default class fase1 extends Phaser.Scene {
       this.personagemLocal.body.setSize(40, 50);
       this.personagemLocal.body.setOffset(12, 14);
       this.personagemLocal.body.setGravityY(10);
-      this.personagemRemoto = this.add.sprite(
-        spawnPoint.x,
-        spawnPoint.y,
-        "fox-primeiro"
-      ).setDepth(6);
+      this.personagemRemoto = this.add
+        .sprite(spawnPoint.x, spawnPoint.y, "fox-primeiro")
+        .setDepth(6);
     } else {
       window.alert("JSala");
       this.game.stop();
@@ -286,6 +283,51 @@ export default class fase1 extends Phaser.Scene {
       allowGravity: false,
       immovable: true,
     });
+
+    this.espinhosCaindo = this.physics.add.group({
+      allowGravity: false,
+      immovable: true,
+    });
+
+    const objetosEspinhos =
+      this.tilemapMapa.getObjectLayer("espinhos_caindo").objects;
+
+    objetosEspinhos.forEach((obj) => {
+      if (obj.name === "espinho") {
+        const espinho = this.espinhosCaindo.create(obj.x, obj.y, "espinhos").setCrop(0, 0, 64,48); // 'espinho' é o nome do sprite
+        espinho.setOrigin(0, 1); // depende do seu sprite
+        espinho.body.setAllowGravity(false); // começa parado
+        espinho.body.setImmovable(true);
+
+        // Armazena posição original se precisar resetar depois
+        espinho.startY = obj.y;
+        espinho.hasFallen = false;
+      }
+    });
+
+    this.espinhosCaindo.children.iterate((espinho) => {
+      espinho.startX = espinho.x;
+      espinho.startY = espinho.y;
+      espinho.hasFallen = false;
+      espinho.setVisible(true);
+      espinho.body.enable = true;
+      espinho.body.setAllowGravity(false);
+      espinho.body.setSize(64, 10); // apenas os últimos 10px de altura
+      espinho.body.setOffset(0, 30);
+    });
+
+    this.physics.add.collider(
+      this.personagemLocal,
+      this.espinhosCaindo,
+      (player, espinho) => {
+        this.matarJogador(); // sua função de "game over" ou respawn
+
+        // Esconde e desativa física, sem destruir o objeto
+        espinho.setVisible(false);
+        espinho.body.enable = false;
+        espinho.body.setVelocity(0, 0);
+      }
+    );
 
     this.joystick = this.plugins.get("rexvirtualjoystickplugin").add(this, {
       x: 125,
@@ -651,7 +693,7 @@ export default class fase1 extends Phaser.Scene {
           this.personagemLocal.setVelocityY(-300);
           this.sound.play("jumpsound");
         }
-    
+
         this.isJumping = true;
         const jumpAnim =
           this.direcaoAtual === "direita"
@@ -660,7 +702,7 @@ export default class fase1 extends Phaser.Scene {
         this.personagemLocal.anims.play(jumpAnim, true);
         this.isWallGrabbing = false;
       }
-    
+
       this.jumpPressed = false;
       this.isJumping = true;
       const jumpAnim =
@@ -717,13 +759,45 @@ export default class fase1 extends Phaser.Scene {
                 y: this.personagemLocal.y,
                 frame: this.personagemLocal.frame.name,
               },
-            }),
+            })
           );
         }
       }
     } catch (error) {
       console.error(error);
     }
+    this.espinhosCaindo.children.iterate((espinho) => {
+      if (!espinho.hasFallen) {
+        const dx = Math.abs(espinho.x - this.personagemLocal.x);
+        const dy = this.personagemLocal.y - espinho.y;
+
+        // Se o personagem estiver a menos de 40px na horizontal
+        // E estiver abaixo do espinho (dy > 0)
+        if (dx < 40 && dy > 0 && dy < 300) {
+          espinho.body.setAllowGravity(true);
+          espinho.body.setGravityY(1000);
+          espinho.hasFallen = true;
+
+          // Não precisa mudar visibilidade aqui, ele já está visível
+          espinho.body.enable = true;
+
+          // Salva posição original ANTES de resetar
+          const { startX, startY } = espinho;
+
+          this.time.delayedCall(3000, () => {
+            if (espinho && espinho.body) {
+              // Reposiciona primeiro!
+              espinho.setPosition(startX, startY);
+              espinho.setVisible(true);
+              espinho.body.enable = true;
+              espinho.body.setAllowGravity(false);
+              espinho.body.setVelocity(0, 0);
+              espinho.hasFallen = false;
+            }
+          });
+        }
+      }
+    });
   }
 
   tratarDano() {
@@ -734,7 +808,7 @@ export default class fase1 extends Phaser.Scene {
     this.personagemLocal.anims.play("personagem-dano", true);
     this.personagemLocal.setTint(0xff7f7f);
 
-    const knockback = this.personagemLocal.flipX ? 150 : -150;
+    const knockback = this.personagemLocal ? 150 : -150;
     this.personagemLocal.setVelocity(knockback, -200);
 
     this.isDashing = true;
@@ -856,7 +930,7 @@ export default class fase1 extends Phaser.Scene {
       key: "personagem-dash-esquerda",
       frames: this.anims.generateFrameNumbers(
         this.personagemLocal.texture.key,
-        { start: 66, end: 69}
+        { start: 66, end: 69 }
       ),
       frameRate: 20,
       repeat: 0,
@@ -895,4 +969,22 @@ export default class fase1 extends Phaser.Scene {
       zona.destroy();
     }
   }
+  matarJogador() {
+    console.log("Jogador morreu! Voltando para o respawn...");
+
+    // Reseta a posição para o spawnPoint
+    this.personagemLocal.setPosition(this.spawnPoint.x, this.spawnPoint.y);
+
+    // Zera a velocidade para evitar que ele continue caindo ou andando
+    this.personagemLocal.setVelocity(0, 0);
+
+    // Se quiser, pode limpar estados ou flags que controlam o personagem aqui
+    this.isDashing = false;
+    this.canDash = true;
+    this.jumpPressed = false;
+
+    // Pode também tocar algum som ou animação de "morte" antes de voltar
+    // this.sound.play("deathSound");
+  }
 }
+
