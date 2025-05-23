@@ -1,7 +1,7 @@
 /*global Phaser*/
 /*eslint no-undef: "error"*/
 export default class fase1 extends Phaser.Scene {
-  constructor() {
+  constructor () {
     super("fase1");
 
     this.threshold = 0.2;
@@ -22,7 +22,7 @@ export default class fase1 extends Phaser.Scene {
     this.contadorCristais = 0; // Inicialize o contador de cristais
   }
 
-  preload() {
+  preload () {
     this.load.tilemapTiledJSON("mapa", "assets/mapa/mapa.json");
     this.load.image("arvore", "assets/mapa/arvore.png");
     this.load.image("chao", "assets/mapa/chao.png");
@@ -64,7 +64,7 @@ export default class fase1 extends Phaser.Scene {
     );
   }
 
-  create() {
+  create () {
     this.physics.world.createDebugGraphic();
     this.musica = this.sound.add("musicaa", {
       loop: true, // para repetir indefinidamente
@@ -259,6 +259,14 @@ export default class fase1 extends Phaser.Scene {
         this.personagemRemoto.y = dados.personagem.y;
         this.personagemRemoto.setFrame(dados.personagem.frame);
       }
+      if (dados.cristal) {
+        this.cristal.forEach((gato, i) => {
+          if (!dados.cristal[i].visible) {
+            gato.objeto.disableBody(true, true)
+          }
+        })
+      };
+
     };
     // this.personagemLocal.setTint(0x800080);
     /*candidate && 
@@ -294,7 +302,9 @@ export default class fase1 extends Phaser.Scene {
 
     objetosEspinhos.forEach((obj) => {
       if (obj.name === "espinho") {
-        const espinho = this.espinhosCaindo.create(obj.x, obj.y, "espinhos").setCrop(0, 0, 64,48); // 'espinho' é o nome do sprite
+        const espinho = this.espinhosCaindo
+          .create(obj.x, obj.y, "espinhos")
+          .setCrop(0, 0, 64, 48); // 'espinho' é o nome do sprite
         espinho.setOrigin(0, 1); // depende do seu sprite
         espinho.body.setAllowGravity(false); // começa parado
         espinho.body.setImmovable(true);
@@ -476,6 +486,24 @@ export default class fase1 extends Phaser.Scene {
       repeat: -1,
     });
 
+    this.cristal = [
+      { x: this.spawnPoint.x, y: this.spawnPoint.y }];
+    
+    this.cristal.forEach((cristal) => {
+      cristal.objeto = this.physics.add.sprite(cristal.x - 100, cristal.y, "crystal")
+      cristal.objeto.play("crystal")
+      this.physics.add.collider(cristal.objeto, this.layerChao)
+      this.physics.add.overlap(this.personagemLocal,
+        cristal.objeto,
+        (personagem, cristal) => {
+          cristal.disableBody(true, true)
+        },
+        null,
+        this
+      )
+         
+    })
+
     this.crystals = this.physics.add.group();
 
     const crystalObjects = this.tilemapMapa.getObjectLayer("Crystals").objects;
@@ -545,7 +573,7 @@ export default class fase1 extends Phaser.Scene {
     */
   }
 
-  coletarCristal(personagem, cristal) {
+  coletarCristal (personagem, cristal) {
     this.sound.play("crystalsound");
     cristal.body.checkCollision.none = true; // Evita múltiplas colisões
 
@@ -556,7 +584,8 @@ export default class fase1 extends Phaser.Scene {
       scaleY: 1.5,
       duration: 300,
       onComplete: () => {
-        cristal.destroy();
+        cristal.setVisible(false);
+        cristal.body.enable = false;
         this.contadorCristais += 1;
         console.log("Cristais Coletados:", this.contadorCristais);
       },
@@ -572,7 +601,7 @@ export default class fase1 extends Phaser.Scene {
     });
   }
 
-  update() {
+  update () {
     this.back.tilePositionX = this.cameras.main.scrollX * 0.3;
     const angle = Phaser.Math.DegToRad(this.joystick.angle);
     const force = this.joystick.force;
@@ -759,6 +788,7 @@ export default class fase1 extends Phaser.Scene {
                 y: this.personagemLocal.y,
                 frame: this.personagemLocal.frame.name,
               },
+              cristal: this.cristal.map((c) => ({ visivel: c.objeto.visible })),
             })
           );
         }
@@ -798,7 +828,27 @@ export default class fase1 extends Phaser.Scene {
         }
       }
     });
+    
+          
+    /*try {
+      if (this.game.dadosJogo.readyState === "open") {
+        if (this.personagemLocal && this.gatos) {
+          this.game.dadosJogo.send(
+            JSON.stringify({
+              personagem: {
+                x: this.personagemLocal.x,
+                y: this.personagemLocal.y,
+                frame: this.personagemLocal.frame.name,
+              },
+              cristal: this.cristal.map(cristal => (cristal => ({ cristal: cristal.objeto.visible }))(cristal)),
+            })
+          )
+        }
+      }
+    }
+  } */
   }
+
 
   tratarDano() {
     if (this.personagemLocal.isInvulnerable) return;
