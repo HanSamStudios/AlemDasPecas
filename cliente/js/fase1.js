@@ -487,16 +487,37 @@ export default class fase1 extends Phaser.Scene {
     });
 
     this.cristal = [
-      { x: this.spawnPoint.x, y: this.spawnPoint.y }];
+      { x: -501.15, y: 3898.24 },
+      { x: 1377.64, y: 3507.33 },
+      { x: 3214.00, y: 4137.64 },
+      { x: 4456.42, y: 3604.30 },
+    {x: 6538.24, y: 4334.61}];
     
     this.cristal.forEach((cristal) => {
-      cristal.objeto = this.physics.add.sprite(cristal.x - 100, cristal.y, "crystal")
+      cristal.objeto = this.physics.add.sprite(cristal.x, cristal.y, "crystal")
+      cristal.objeto.body.setAllowGravity(false);
       cristal.objeto.play("crystal_spin")
       this.physics.add.collider(cristal.objeto, this.layerChao)
       this.physics.add.overlap(this.personagemLocal,
         cristal.objeto,
         (personagem, cristal) => {
-          cristal.disableBody(true, true)
+          this.tweens.add({
+            targets: cristal,
+            scale: 0,
+            alpha: 0,
+            duration: 300,
+            onComplete: () => {
+              cristal.disableBody(true, true);
+            },
+          });
+          this.sound.play("crystalsound")
+          this.pontuacao += 1;
+          this.personagemLocal.setTint(0xff0000);
+
+          // Voltar à cor normal após 300ms
+          this.time.delayedCall(300, () => {
+            this.personagemLocal.clearTint();
+          });
         },
         null,
         this
