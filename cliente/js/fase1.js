@@ -512,11 +512,32 @@ export default class fase1 extends Phaser.Scene {
           });
           this.sound.play("crystalsound")
           this.pontuacao += 1;
-          this.personagemLocal.setTint(0xff0000);
+          const rainbowColors = [
+            0xff0000, // vermelho
+            0xff7f00, // laranja
+            0xffff00, // amarelo
+            0x00ff00, // verde
+            0x0000ff, // azul
+            0x4b0082, // anil
+            0x8f00ff, // violeta
+          ];
 
-          // Voltar à cor normal após 300ms
-          this.time.delayedCall(300, () => {
-            this.personagemLocal.clearTint();
+          let colorIndex = 0;
+
+          // Intervalo que troca as cores
+          const colorEvent = this.time.addEvent({
+            delay: 50,
+            loop: true,
+            callback: () => {
+              this.personagemLocal.setTint(rainbowColors[colorIndex]);
+              colorIndex = (colorIndex + 1) % rainbowColors.length;
+            },
+          });
+
+          // Depois de 700ms, para o efeito e limpa a cor
+          this.time.delayedCall(700, () => {
+            colorEvent.remove(false); // para o evento de troca
+            this.personagemLocal.clearTint(); // remove a cor
           });
         },
         null,
