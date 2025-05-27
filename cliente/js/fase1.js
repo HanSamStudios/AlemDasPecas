@@ -683,8 +683,8 @@ passarinho2.maxX = 8800;
 passarinho2.atingido = false;
 
     this.physics.add.overlap(this.personagemLocal, this.passarinho, () => {
-  // Faz o personagem "pular" alto
-  this.passarinho.setVelocityX(100);; // ajuste esse valor conforme necessário
+  this.canDash = true;
+  this.canAirDash = true;
   });
   this.passarinhos.minX = 8180.00;
   this.passarinhos.maxX = 8352.00;
@@ -965,6 +965,8 @@ this.fullscreen = this.add.image(680, 50, "fullscreen")
   this.physics.add.overlap(this.personagemLocal, this.passarinhos, (personagem, passarinho) => {
   if (!passarinho.atingido) {
     personagem.setVelocityY(-425);
+    this.canDash = true;
+    this.canAirDash = true;
     passarinho.atingido = true;
 
     const direcao = passarinho.body.velocity.x > 0 ? 1 : -1;
