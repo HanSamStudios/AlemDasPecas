@@ -43,6 +43,14 @@ export default class fase1 extends Phaser.Scene {
       frameWidth: 64,
       frameHeight: 64,
     });
+     this.load.spritesheet("passarinho", "assets/passarinho.png", {
+      frameWidth: 64,
+      frameHeight: 64,
+    });
+    this.load.spritesheet("passarinho-dano", "assets/passarinho-dano.png", {
+      frameWidth: 64,
+      frameHeight: 64,
+    });
     this.load.audio("musicaa", "assets/musicaa.mp3");
     this.load.audio("dashsound", "assets/dashsound.mp3");
     this.load.audio("crystalsound", "assets/crystalsound.mp3");
@@ -291,6 +299,16 @@ export default class fase1 extends Phaser.Scene {
           }
         });
       }
+    if (dados.passarinho) {
+      this.passarinho.x = dados.passarinho.x;
+      this.passarinho.y = dados.passarinho.y;
+      this.passarinho.setFrame(dados.passarinho.frame);
+      this.passarinho.setFlipX(dados.passarinho.flipX);
+
+  if (dados.passarinho.anim && this.passarinho.anims?.currentAnim?.key !== dados.passarinho.anim) {
+    this.passarinho.play(dados.passarinho.anim);
+  }
+}
     };
     // this.personagemLocal.setTint(0x800080);
     /*candidate && 
@@ -639,6 +657,36 @@ export default class fase1 extends Phaser.Scene {
         this.zonaFundo.body.setImmovable(true);
       }
     });
+    this.passarinhos = this.physics.add.group();
+
+// 2. Cria passarinho 1
+const passarinho1 = this.passarinhos.create(8180, 3854, "passarinho");
+passarinho1.setDepth(10);
+passarinho1.play("passarinho");
+passarinho1.body.allowGravity = false;
+passarinho1.body.immovable = true;
+passarinho1.setVelocityX(100);
+passarinho1.minX = 8100;
+passarinho1.maxX = 8280;
+passarinho1.atingido = false;
+
+// 3. Cria passarinho 2
+const passarinho2 = this.passarinhos.create(8380, 3854, "passarinho");
+passarinho2.setDepth(10);
+passarinho2.play("passarinho");
+passarinho2.body.allowGravity = false;
+passarinho2.body.immovable = true;
+passarinho2.setVelocityX(-100);
+passarinho2.minX = 8400;
+passarinho2.maxX = 8800;
+passarinho2.atingido = false;
+
+    this.physics.add.overlap(this.personagemLocal, this.passarinho, () => {
+  // Faz o personagem "pular" alto
+  this.passarinho.setVelocityX(100);; // ajuste esse valor conforme necessário
+  });
+  this.passarinhos.minX = 8180.00;
+  this.passarinhos.maxX = 8352.00;
     /*
     this.physics.add.overlap(
       this.personagemLocal,
@@ -877,6 +925,49 @@ export default class fase1 extends Phaser.Scene {
         }
       }
     });
+   this.passarinhos.children.iterate(passarinho => {
+  if (!passarinho.atingido) {
+    if (passarinho.x <= passarinho.minX) {
+      passarinho.setVelocityX(100);
+      passarinho.setFlipX(true); // vira para a direita
+    } else if (passarinho.x >= passarinho.maxX) {
+      passarinho.setVelocityX(-100);
+      passarinho.setFlipX(false); // vira para a esquerda
+    }
+  }
+});
+  if (this.eDonoDoPassarinho && this.game.dadosJogo?.readyState === "open") {
+  const dados = {
+    passarinho: {
+      x: this.passarinho.x,
+      y: this.passarinho.y,
+      frame: this.passarinho.anims?.currentFrame?.index || 0,
+      flipX: this.passarinho.flipX,
+      anim: this.passarinho.anims?.currentAnim?.key || null
+    },
+  };
+  this.game.dadosJogo.send(JSON.stringify(dados));
+}
+
+  // Também aqui pode ir a lógica do "pulão":
+  this.physics.add.overlap(this.personagemLocal, this.passarinhos, (personagem, passarinho) => {
+  if (!passarinho.atingido) {
+    personagem.setVelocityY(-425);
+    passarinho.atingido = true;
+
+    const direcao = passarinho.body.velocity.x > 0 ? 1 : -1;
+
+    passarinho.setVelocityX(0);
+    passarinho.play("passarinho-dano");
+
+    this.time.delayedCall(200, () => {
+      passarinho.play("passarinho");
+      passarinho.setVelocityX(100 * direcao);
+      passarinho.setFlipX(direcao < 0);
+      passarinho.atingido = false;
+    });
+  }
+});
   }
 
   tratarDano () {
@@ -1064,6 +1155,24 @@ export default class fase1 extends Phaser.Scene {
       frameRate: 6,
       repeat: 0,
     });
+    this.anims.create({
+  key: "passarinho",
+  frames: this.anims.generateFrameNumbers("passarinho", {
+    start: 0,
+    end: 8,
+  }),
+  frameRate: 15,
+  repeat: -1,
+});
+this.anims.create({
+  key: "passarinho-dano",
+  frames: this.anims.generateFrameNumbers("passarinho-dano", {
+    start: 0,
+    end: 4,
+  }),
+  frameRate: 2,
+  repeat: 0,
+});
   }
 
   resetarParaSpawn () {
