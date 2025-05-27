@@ -75,6 +75,7 @@ export default class fase1 extends Phaser.Scene {
       "./js/rexvirtualjoystickplugin.min.js",
       true
     );
+    this.load.image("fullscreen", "assets/fullscreen.png");
   }
 
   create () {
@@ -696,8 +697,19 @@ passarinho2.atingido = false;
       this
     );
     */
-  }
-
+this.fullscreen = this.add.image(680, 50, "fullscreen")
+  .setInteractive()
+  .setDepth(50)
+  .setScale(0.01)
+  .setScrollFactor(0) // Corrigido: "setscrollFactor" → "setScrollFactor"
+  .on("pointerdown", () => {
+    if (this.scale.isFullscreen) {
+      this.scale.stopFullscreen(); // Corrigido: "this.cale" → "this.scale"
+    } else {
+      this.scale.startFullscreen();
+    }
+  });
+}
   update () {
     this.back.tilePositionX = this.cameras.main.scrollX * 0.3;
     const angle = Phaser.Math.DegToRad(this.joystick.angle);
