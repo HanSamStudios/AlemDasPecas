@@ -26,6 +26,7 @@ export default class fase1 extends Phaser.Scene {
     this.load.tilemapTiledJSON("mapa", "assets/mapa/mapa.json");
     this.load.image("arvore", "assets/mapa/arvore.png");
     this.load.image("chao", "assets/mapa/chao.png");
+    this.load.image("placaa", "assets/mapa/placaa.png");
     this.load.image("flores", "assets/mapa/flores.png");
     this.load.image("jump", "assets/jump.png");
     this.load.image("fundo2", "assets/fundo2.png");
@@ -95,6 +96,7 @@ export default class fase1 extends Phaser.Scene {
     this.tilesetCasa = this.tilemapMapa.addTilesetImage("casa");
     this.tilesetChao = this.tilemapMapa.addTilesetImage("chao", null, 64, 64);
     this.tilesetVaso = this.tilemapMapa.addTilesetImage("vaso", null, 64, 64);
+    this.tilesetPlacaa = this.tilemapMapa.addTilesetImage("placaa", null, 64, 64);
     this.tilesetEspinhos = this.tilemapMapa.addTilesetImage("espinhos");
     this.tilesetFlores = this.tilemapMapa.addTilesetImage(
       "flores",
@@ -135,11 +137,9 @@ export default class fase1 extends Phaser.Scene {
         .setFlipX(true)
         .setScale(1.5);
     });
-    this.layerObjeto = this.tilemapMapa
-      .createLayer("objeto", [
-        this.tilesetFlores,
-        this.tilesetVaso,
-        this.tilesetArvore,
+    this.layersetas = this.tilemapMapa
+      .createLayer("setas", [
+        this.tilesetPlacaa,
       ])
       .setDepth(10);
 
@@ -524,8 +524,8 @@ export default class fase1 extends Phaser.Scene {
     this.animacoesDano = [];
 
     for (let i = 0; i < 3; i++) {
-      const x = 30 + i * 38;
-      const y = 20;
+      const x = 360 + i * 38;
+      const y = 30;
 
       // Coração visível
       const coracao = this.add
@@ -562,11 +562,15 @@ export default class fase1 extends Phaser.Scene {
     });
 
     this.cristal = [
+      { x: -1910.24, y: 3895.21},
       { x: -501.15, y: 3898.24 },
       { x: 1377.64, y: 3507.33 },
       { x: 3214.0, y: 4137.64 },
       { x: 4456.42, y: 3604.3 },
-      { x: 6538.24, y: 4334.61 },
+      { x: 6538.24, y: 4333.27 },
+      { x: 8482.00, y: 3664.67},
+       {x: 10442.00, y: 3508.67},
+       {x: 11563.33, y: 3564.67},
     ];
 
     this.cristal.forEach((cristal) => {
@@ -697,7 +701,7 @@ passarinho2.atingido = false;
       this
     );
     */
-this.fullscreen = this.add.image(680, 50, "fullscreen")
+this.fullscreen = this.add.image(30, 30, "fullscreen")
   .setInteractive()
   .setDepth(50)
   .setScale(0.01)
