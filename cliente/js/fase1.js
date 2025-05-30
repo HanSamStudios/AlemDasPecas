@@ -278,12 +278,12 @@ export default class fase1 extends Phaser.Scene {
     
         // Se a vida chegou a zero pelo dado recebido, finalize localmente
         if (this.vidas <= 0) {
-          this.scene.start("abertura")
+          this.scene.start("final-perdeu")
           // Aqui desative controles, etc, se precisar
         }
       }
       if (dados.gameOver) {
-        this.scene.start("abertura")
+        this.scene.start("final-perdeu")
       }
     
 
@@ -1016,7 +1016,7 @@ this.fullscreen = this.add.image(680, 50, "fullscreen")
 
     if (this.vidas <= 0) {
       this.atualizarVidas();
-      this.scene.start("abertura");
+      this.scene.start("final-perdeu");
       return;
     }
     this.atualizarVidas();
