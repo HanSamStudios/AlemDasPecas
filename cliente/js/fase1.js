@@ -29,6 +29,7 @@ export default class fase1 extends Phaser.Scene {
     this.load.image("placaa", "assets/mapa/placaa.png");
     this.load.image("flores", "assets/mapa/flores.png");
     this.load.image("jump", "assets/jump.png");
+    this.load.image("plataforma", "assets/plataforma.png");
     this.load.image("dash", "assets/dash.png");
     this.load.image("fundo2", "assets/fundo2.png");
     this.load.image("coracao", "assets/coracao.png");
@@ -717,8 +718,23 @@ this.fullscreen = this.add.image(30, 30, "fullscreen")
       this.scale.startFullscreen();
     }
   });
+
+  this.plataforma = this.physics.add.sprite(11900.67, 3623.33, 'plataforma');
+
+// Configurações básicas
+this.plataforma.body.allowGravity = false; // plataforma não cai
+this.plataforma.body.immovable = true;     // plataforma não é empurrada
+this.plataforma.setVelocityX(100);         // começa se movendo pra direita
+
+// Colisão entre personagem e plataforma
+this.physics.add.collider(this.personagemLocal, this.plataforma);
 }
   update () {
+  if (this.plataforma.x > 12800) { // limite da direita
+    this.plataforma.setVelocityX(-100);
+  } else if (this.plataforma.x < 11750) { // limite da esquerda
+    this.plataforma.setVelocityX(100);
+  }
     this.back.tilePositionX = this.cameras.main.scrollX * 0.3;
     const angle = Phaser.Math.DegToRad(this.joystick.angle);
     const force = this.joystick.force;
@@ -776,8 +792,12 @@ this.fullscreen = this.add.image(30, 30, "fullscreen")
       tileRight &&
       tileRight.collides;
 
+    const encostadoPlataformaEsquerda = this.personagemLocal.body.touching.left && this.plataforma.body.touching.right;
+    const encostadoPlataformaDireita = this.personagemLocal.body.touching.right && this.plataforma.body.touching.left;
+    const encostadoPlataforma = encostadoPlataformaEsquerda || encostadoPlataformaDireita;
+
     if (!this.personagemLocal.body.blocked.down) {
-      if ((encostadoEsquerda || encostadoDireita) && !this.isDashing &&
+      if ((encostadoEsquerda || encostadoDireita || encostadoPlataforma) && !this.isDashing &&
     this.personagemLocal.body.velocity.y > -100)  {
         const ladoAtual = encostadoEsquerda ? "left" : "right";
 
@@ -990,7 +1010,9 @@ this.fullscreen = this.add.image(30, 30, "fullscreen")
       passarinho.atingido = false;
     });
   }
+  
 });
+
   }
 
   tratarDano () {
