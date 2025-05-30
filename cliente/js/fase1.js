@@ -773,7 +773,8 @@ this.fullscreen = this.add.image(30, 30, "fullscreen")
       tileRight.collides;
 
     if (!this.personagemLocal.body.blocked.down) {
-      if ((encostadoEsquerda || encostadoDireita) && !this.isDashing) {
+      if ((encostadoEsquerda || encostadoDireita) && !this.isDashing &&
+    this.personagemLocal.body.velocity.y > 30)  {
         const ladoAtual = encostadoEsquerda ? "left" : "right";
 
         if (this.ultimaParedeGrudada !== ladoAtual) {
