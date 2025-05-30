@@ -29,6 +29,7 @@ export default class fase1 extends Phaser.Scene {
     this.load.image("placaa", "assets/mapa/placaa.png");
     this.load.image("flores", "assets/mapa/flores.png");
     this.load.image("jump", "assets/jump.png");
+    this.load.image("dash", "assets/dash.png");
     this.load.image("fundo2", "assets/fundo2.png");
     this.load.image("coracao", "assets/coracao.png");
     this.load.image("casa", "assets/mapa/casa.png");
@@ -440,12 +441,11 @@ export default class fase1 extends Phaser.Scene {
     });
 
     this.botaoDash = this.add
-      .image(635, 300, "jump")
+      .image(635, 300, "dash")
       .setDepth(10)
       .setScrollFactor(0)
       .setInteractive();
 
-    this.botaoDash.setAngle(90);
 
     // Ajustando o tamanho da imagem para o botão de dash
     this.botaoDash.setDisplaySize(80, 80); // Ajuste o tamanho conforme necessário
@@ -778,7 +778,7 @@ this.fullscreen = this.add.image(30, 30, "fullscreen")
 
     if (!this.personagemLocal.body.blocked.down) {
       if ((encostadoEsquerda || encostadoDireita) && !this.isDashing &&
-    this.personagemLocal.body.velocity.y > 30)  {
+    this.personagemLocal.body.velocity.y > 2)  {
         const ladoAtual = encostadoEsquerda ? "left" : "right";
 
         if (this.ultimaParedeGrudada !== ladoAtual) {
