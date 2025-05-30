@@ -5,31 +5,47 @@ export default class sala extends Phaser.Scene {
 
   }
 
+  
+  preload() {
+    this.load.image('escolha', 'assets/escolha.png') // <-- Caminho correto da imagem
+    this.fontReady = false;
+  WebFont.load({
+    custom: {
+      families: ['game-over'],
+    },
+    active: () => {
+      this.fontReady = true;
+    }
+  });
+}
+
   create () { 
-      this.add.text(280, 23, 'Escolha sua sala', {
-    fontSize: '35px',
-    fontFamily: 'Arial',
-    color: '#ffffff',
-    align: 'center'
-  })
+     if (!this.fontReady) {
+    this.time.delayedCall(100, () => this.create(), [], this); // tenta de novo
+    return;
+  }
+     this.add.image(0, 0, 'escolha').setOrigin(0).setDepth(0).setScale(0.5)
     this.salas = [
-      { x: 200, y: 100, numero: '1' },
-      { x: 300, y: 100, numero: '2' },
-      { x: 400, y: 100, numero: '3' },
-      { x: 500, y: 100, numero: '4' },
-      { x: 600, y: 100, numero: '5' },
-      { x: 200, y: 200, numero: '6' },
-      { x: 300, y: 200, numero: '7' },
-      { x: 400, y: 200, numero: '8' },
-      { x: 500, y: 200, numero: '9' },
-      { x: 600, y: 200, numero: '10' },
+      { x: 300, y: 200, numero: '1' },
+      { x: 390, y: 200, numero: '2' },
+      { x: 490, y: 200, numero: '3' },
+      { x: 570, y: 200, numero: '4' },
+      { x: 670, y: 200, numero: '5' },
+      { x: 300, y: 300, numero: '6' },
+      { x: 390, y: 300, numero: '7' },
+      { x: 490, y: 300, numero: '8' },
+      { x: 570, y: 300, numero: '9' },
+      { x: 655, y: 300, numero: '10' },
     ]
   this.salas.forEach((sala) => { 
     sala.botao = this.add
       .text(sala.x, sala.y, sala.numero, {
         fontSize: '32px', // Aumenta o tamanho da fonte
+        fontFamily: 'game-over',
         color: '#ffffff' // Opcional: define a cor
+        
       })
+      .setShadow(2, 2, '#000000', 2, true, true)
       .setInteractive()
       .on("pointerdown", () => {
         this.game.sala = sala.numero
