@@ -778,7 +778,7 @@ this.fullscreen = this.add.image(30, 30, "fullscreen")
 
     if (!this.personagemLocal.body.blocked.down) {
       if ((encostadoEsquerda || encostadoDireita) && !this.isDashing &&
-    this.personagemLocal.body.velocity.y > 2)  {
+    this.personagemLocal.body.velocity.y > -100)  {
         const ladoAtual = encostadoEsquerda ? "left" : "right";
 
         if (this.ultimaParedeGrudada !== ladoAtual) {
