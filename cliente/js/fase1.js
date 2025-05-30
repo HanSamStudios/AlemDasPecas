@@ -561,36 +561,40 @@ export default class fase1 extends Phaser.Scene {
       repeat: -1,
     });
 
-    this.cristal = [
-      { x: -1910.24, y: 3895.21},
-      { x: -501.15, y: 3898.24 },
-      { x: 1377.64, y: 3507.33 },
-      { x: 3214.0, y: 4137.64 },
-      { x: 4456.42, y: 3604.3 },
-      { x: 6538.24, y: 4333.27 },
-      { x: 8482.00, y: 3664.67},
-       {x: 10442.00, y: 3508.67},
-       {x: 11563.33, y: 3564.67},
-    ];
+  this.cristal = [
+  { x: -1910.24, y: 3895.21, cor: 0x00ff00 }, // vermelho
+  { x: -501.15, y: 3898.24, cor: 0xff0000 },  // verde
+  { x: 1377.64, y: 3507.33, cor: 0x0000ff },  // azul
+  { x: 3214.0, y: 4137.64, cor: 0xffff00 },   // amarelo
+  { x: 4456.42, y: 3604.3, cor: 0xff00ff },   // rosa
+  { x: 6538.24, y: 4333.27, cor: 0x00ffff },  // ciano
+  { x: 8482.00, y: 3664.67, cor: 0xffffff },  // branco (sem mudança)
+  { x: 10442.00, y: 3508.67, cor: 0xffa500 }, // laranja
+  { x: 11563.33, y: 3564.67, cor: 0x800080 }, // roxo
+];
 
-    this.cristal.forEach((cristal) => {
-      cristal.objeto = this.physics.add.sprite(cristal.x, cristal.y, "crystal");
-      cristal.objeto.body.setAllowGravity(false);
-      cristal.objeto.play("crystal_spin");
-      this.physics.add.collider(cristal.objeto, this.layerChao);
-      this.physics.add.overlap(
-        this.personagemLocal,
-        cristal.objeto,
-        (personagem, cristal) => {
-          this.tweens.add({
-            targets: cristal,
-            scale: 0,
-            alpha: 0,
-            duration: 300,
-            onComplete: () => {
-              cristal.disableBody(true, true);
-            },
-          });
+this.cristal.forEach((cristal) => {
+  cristal.objeto = this.physics.add.sprite(cristal.x, cristal.y, "crystal");
+  cristal.objeto.body.setAllowGravity(false);
+  cristal.objeto.play("crystal_spin");
+
+  // Aplica a cor tint sem perder a textura
+  cristal.objeto.setTint(cristal.cor);
+
+  this.physics.add.collider(cristal.objeto, this.layerChao);
+  this.physics.add.overlap(
+    this.personagemLocal,
+    cristal.objeto,
+    (personagem, cristal) => {
+      this.tweens.add({
+        targets: cristal,
+        scale: 0,
+        alpha: 0,
+        duration: 300,
+        onComplete: () => {
+          cristal.disableBody(true, true);
+        },
+      });
           this.sound.play("crystalsound");
           this.pontuacao += 1;
           const rainbowColors = [
