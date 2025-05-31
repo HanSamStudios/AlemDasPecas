@@ -73,6 +73,10 @@ export default class fase1 extends Phaser.Scene {
       frameWidth: 64,
       frameHeight: 64,
     });
+    this.load.spritesheet("foxmal", "assets/foxmal.png", {
+      frameWidth: 64,
+      frameHeight: 64,
+    });
     this.load.plugin(
       "rexvirtualjoystickplugin",
       "./js/rexvirtualjoystickplugin.min.js",
@@ -728,6 +732,22 @@ this.plataforma.setVelocityX(100);         // começa se movendo pra direita
 
 // Colisão entre personagem e plataforma
 this.physics.add.collider(this.personagemLocal, this.plataforma);
+
+this.replayBuffer = [];
+this.ghostDelay = 45; // atraso em frames
+this.fantasmaAtivado = false;
+
+this.ghost = this.physics.add.sprite(0, 0, "foxmal").setSize(40, 50).setOffset(12, 14);
+this.ghost.setAlpha(0.5);
+this.ghost.setVisible(false); // só vai aparecer quando ativar
+this.ghost.body.allowGravity = false;
+this.ghost.setDepth(100); // atrás do personagem
+
+this.physics.add.overlap(this.ghost, this.personagemLocal, () => {
+  // Função que mata a raposa
+  this.somMorte.play();
+  this.tratarDano();
+});
 }
   update () {
   if (this.plataforma.x > 12800) { // limite da direita
@@ -916,6 +936,50 @@ this.physics.add.collider(this.personagemLocal, this.plataforma);
         ease: "Linear",
       });
     }
+
+    // Ativa o fantasma quando passa da posição desejada
+ if (!this.fantasmaAtivado && this.personagemLocal.x > 14012.12) {
+  this.fantasmaAtivado = true;
+  this.ghost.setVisible(true);
+}
+
+if (this.fantasmaAtivado) {
+  // Grava a posição, flip e animação atual do personagem no buffer
+  this.replayBuffer.push({
+    x: this.personagemLocal.x,
+    y: this.personagemLocal.y,
+    flipX: this.personagemLocal.flipX,
+    anim: this.personagemLocal.anims?.isPlaying
+      ? (this.personagemLocal.anims.currentAnim ? this.personagemLocal.anims.currentAnim.key : null)
+      : null
+  });
+
+  // Limita tamanho do buffer (quantos frames armazenar)
+  if (this.replayBuffer.length > 300) {
+    this.replayBuffer.shift();
+  }
+
+  // Quando o buffer tiver frames suficientes, atualiza a posição do fantasma atrasado
+  if (this.replayBuffer.length > this.ghostDelay) {
+    const ghostData = this.replayBuffer[0];
+
+    this.ghost.setPosition(ghostData.x, ghostData.y);
+    this.ghost.flipX = ghostData.flipX;
+
+   if (ghostData.anim) {
+  // adiciona sufixo '-ghost' para usar animação do foxmal
+  const ghostAnimKey = ghostData.anim + "-ghost";
+
+  // só toca se for diferente da atual (pra não reiniciar a animação toda hora)
+  if (this.ghost.anims.currentAnim?.key !== ghostAnimKey) {
+    this.ghost.anims.play(ghostAnimKey, true);
+  }
+}
+
+    // Remove o frame usado do buffer
+    this.replayBuffer.shift();
+  }
+}
     try {
       if (this.game.dadosJogo.readyState === "open") {
         if (this.personagemLocal) {
@@ -1218,6 +1282,80 @@ this.anims.create({
   frameRate: 2,
   repeat: 0,
 });
+
+//sprites da raposa fantasma
+
+this.anims.create({
+  key: "personagem-andando-direita-ghost",
+  frames: this.anims.generateFrameNumbers("foxmal", { start: 3, end: 9 }),
+  frameRate: 10,
+  repeat: -1,
+});
+this.anims.create({
+  key: "personagem-andando-esquerda-ghost",
+  frames: this.anims.generateFrameNumbers("foxmal", { start: 39, end: 45 }),
+  frameRate: 10,
+  repeat: -1,
+});
+this.anims.create({
+  key: "personagem-parado-direita-ghost",
+  frames: this.anims.generateFrameNumbers("foxmal", { start: 1, end: 1 }),
+  frameRate: 1,
+});
+this.anims.create({
+  key: "personagem-parado-esquerda-ghost",
+  frames: this.anims.generateFrameNumbers("foxmal", { start: 36, end: 36 }),
+  frameRate: 1,
+});
+this.anims.create({
+  key: "personagem-pulando-direita-ghost",
+  frames: this.anims.generateFrameNumbers("foxmal", { start: 19, end: 19 }),
+  frameRate: 10,
+  repeat: -1,
+});
+this.anims.create({
+  key: "personagem-pulando-esquerda-ghost",
+  frames: this.anims.generateFrameNumbers("foxmal", { start: 55, end: 55 }),
+  frameRate: 10,
+  repeat: -1,
+});
+this.anims.create({
+  key: "personagem-caindo-direita-ghost",
+  frames: this.anims.generateFrameNumbers("foxmal", { start: 20, end: 20 }),
+  frameRate: 10,
+  repeat: -1,
+});
+this.anims.create({
+  key: "personagem-caindo-esquerda-ghost",
+  frames: this.anims.generateFrameNumbers("foxmal", { start: 56, end: 56 }),
+  frameRate: 10,
+  repeat: -1,
+});
+this.anims.create({
+  key: "personagem-wallgrab-direita-ghost",
+  frames: this.anims.generateFrameNumbers("foxmal", { start: 21, end: 21 }),
+  frameRate: 10,
+  repeat: -1,
+});
+this.anims.create({
+  key: "personagem-wallgrab-esquerda-ghost",
+  frames: this.anims.generateFrameNumbers("foxmal", { start: 57, end: 57 }),
+  frameRate: 10,
+  repeat: -1,
+});
+this.anims.create({
+  key: "personagem-dash-direita-ghost",
+  frames: this.anims.generateFrameNumbers("foxmal", { start: 30, end: 33 }),
+  frameRate: 20,
+  repeat: 0,
+});
+this.anims.create({
+  key: "personagem-dash-esquerda-ghost",
+  frames: this.anims.generateFrameNumbers("foxmal", { start: 66, end: 69 }),
+  frameRate: 20,
+  repeat: 0,
+});
+
   }
 
   resetarParaSpawn () {
