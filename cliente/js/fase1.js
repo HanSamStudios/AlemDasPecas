@@ -939,45 +939,6 @@ this.physics.add.overlap(this.ghost, this.personagemLocal, () => {
       });
     }
 
-     if (this.personagemLocal.x > 14012.12 && this.fundoAtual !== "fantasmagorico") {
-    this.fundoAtual = "fantasmagorico";
-
-    // Fade out dos fundos antigos
-    this.tweens.add({
-      targets: [this.back, this.fundo2], // pode adicionar outros se tiver
-      alpha: 0,
-      duration: 1000,
-      ease: "Linear",
-    });
-
-    // Aqui você deve garantir que tem o sprite do fundo "fantasmagorico"
-    this.fantasmagorico.setAlpha(0); // Começa invisível (se não tiver feito ainda)
-    this.tweens.add({
-      targets: this.fantasmagorico,
-      alpha: 1,
-      duration: 1000,
-      ease: "Linear",
-    });
-  } 
-
-  // Se quiser voltar para o fundo anterior ao voltar pra trás
-  else if (this.personagemLocal.x <= 14012.12 && this.fundoAtual === "fantasmagorico") {
-    this.fundoAtual = "back"; // ou outro fundo padrão que queira
-
-    this.tweens.add({
-      targets: this.fantasmagorico,
-      alpha: 0,
-      duration: 1000,
-      ease: "Linear",
-    });
-    this.tweens.add({
-      targets: [this.back, this.fundo2], // ou qual fundo for padrão
-      alpha: 1,
-      duration: 1000,
-      ease: "Linear",
-    });
-  }
-
     // Ativa o fantasma quando passa da posição desejada
  if (!this.fantasmaAtivado && this.personagemLocal.x > 14012.12) {
   this.fantasmaAtivado = true;
