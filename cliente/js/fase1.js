@@ -30,6 +30,7 @@ export default class fase1 extends Phaser.Scene {
     this.load.image("placaa", "assets/mapa/placaa.png");
     this.load.image("flores", "assets/mapa/flores.png");
     this.load.image("jump", "assets/jump.png");
+    this.load.image("cemiterio", "assets/cemiterio.png");
     this.load.image("plataforma", "assets/plataforma.png");
     this.load.image("dash", "assets/dash.png");
     this.load.image("fundo2", "assets/fundo2.png");
@@ -128,6 +129,12 @@ export default class fase1 extends Phaser.Scene {
       .setOrigin(0)
       .setScrollFactor(0);
     this.cavernaFundo.setAlpha(0);
+  
+     this.cemiterio = this.add.tileSprite(0, 0, 800, 450, "cemiterio");
+    this.cemiterio.setOrigin(0, 0);
+    this.cemiterio.setScrollFactor(0);
+    this.cemiterio.setAlpha(0);
+    this.cemiterio.setDepth(-10)
 
     this.fundoAtual = "back";
 
@@ -758,6 +765,7 @@ this.physics.add.overlap(this.ghost, this.personagemLocal, () => {
     this.plataforma.setVelocityX(100);
   }
     this.back.tilePositionX = this.cameras.main.scrollX * 0.3;
+    this.cemiterio.tilePositionX = this.cameras.main.scrollX * 0.3;
     const angle = Phaser.Math.DegToRad(this.joystick.angle);
     const force = this.joystick.force;
 
@@ -937,7 +945,84 @@ this.physics.add.overlap(this.ghost, this.personagemLocal, () => {
         duration: 1000,
         ease: "Linear",
       });
+
+      
     }
+  
+    // Verifica se o personagem passou da coordenada x:14012.12 e troca para "cemiterio"
+if (this.personagemLocal.x > 14012.12 && this.fundoAtual !== "cemiterio") {
+  console.log("→ Entrando no cemitério");
+  this.fundoAtual = "cemiterio";
+
+  this.cemiterio.setVisible(true); // <- ISSO FAZ VOLTAR A APARECER
+
+  this.tweens.add({
+    targets: this.back,
+    alpha: 0,
+    duration: 1000,
+    ease: "Linear",
+  });
+
+  this.tweens.add({
+    targets: this.cemiterio,
+    alpha: 1,
+    duration: 1000,
+    ease: "Linear",
+  });
+
+} else if (this.personagemLocal.x < 14012.12 && this.cemiterio.alpha > 0) {
+  console.log("→ Saindo do cemitério, escondendo fundo");
+  this.fundoAtual = "back";
+
+  this.tweens.add({
+    targets: this.cemiterio,
+    alpha: 0,
+    duration: 1000,
+    ease: "Linear",
+    onComplete: () => {
+      this.cemiterio.setVisible(false);
+      console.log("→ Cemitério escondido");
+    }
+  });
+
+
+  const dentroZona = Phaser.Geom.Intersects.RectangleToRectangle(
+    this.personagemLocal.getBounds(),
+    this.zonaFundo.getBounds()
+  );
+
+  if (dentroZona && this.fundoAtual !== "fundo2") {
+    this.fundoAtual = "fundo2";
+    this.tweens.add({
+      targets: this.back,
+      alpha: 0,
+      duration: 1000,
+      ease: "Linear",
+    });
+    this.tweens.add({
+      targets: this.fundo2,
+      alpha: 1,
+      duration: 1000,
+      ease: "Linear",
+    });
+  }
+
+  if (!dentroZona && this.fundoAtual !== "back") {
+    this.fundoAtual = "back";
+    this.tweens.add({
+      targets: this.back,
+      alpha: 1,
+      duration: 1000,
+      ease: "Linear",
+    });
+    this.tweens.add({
+      targets: this.fundo2,
+      alpha: 0,
+      duration: 1000,
+      ease: "Linear",
+    });
+  }
+}
 
     // Ativa o fantasma quando passa da posição desejada
  if (!this.fantasmaAtivado && this.personagemLocal.x > 14012.12) {
