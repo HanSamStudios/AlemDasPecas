@@ -26,6 +26,7 @@ export default class fase1 extends Phaser.Scene {
     this.load.tilemapTiledJSON("mapa", "assets/mapa/mapa.json");
     this.load.image("arvore", "assets/mapa/arvore.png");
     this.load.image("chao", "assets/mapa/chao.png");
+    this.load.image("fantasm", "assets/mapa/fantasm.png");
     this.load.image("placaa", "assets/mapa/placaa.png");
     this.load.image("flores", "assets/mapa/flores.png");
     this.load.image("jump", "assets/jump.png");
@@ -101,6 +102,7 @@ export default class fase1 extends Phaser.Scene {
 
     this.tilesetCasa = this.tilemapMapa.addTilesetImage("casa");
     this.tilesetChao = this.tilemapMapa.addTilesetImage("chao", null, 64, 64);
+     this.tilesetFantasm = this.tilemapMapa.addTilesetImage("fantasm", null, 64, 64);
     this.tilesetVaso = this.tilemapMapa.addTilesetImage("vaso", null, 64, 64);
     this.tilesetPlacaa = this.tilemapMapa.addTilesetImage("placaa", null, 64, 64);
     this.tilesetEspinhos = this.tilemapMapa.addTilesetImage("espinhos");
@@ -130,7 +132,7 @@ export default class fase1 extends Phaser.Scene {
     this.fundoAtual = "back";
 
     this.layerChao = this.tilemapMapa
-      .createLayer("chao", [this.tilesetChao])
+      .createLayer("chao", [this.tilesetChao, this.tilesetFantasm])
       .setDepth(10);
     this.layerEspinhos = this.tilemapMapa
       .createLayer("espinhos", [this.tilesetEspinhos])
@@ -937,6 +939,45 @@ this.physics.add.overlap(this.ghost, this.personagemLocal, () => {
       });
     }
 
+     if (this.personagemLocal.x > 14012.12 && this.fundoAtual !== "fantasmagorico") {
+    this.fundoAtual = "fantasmagorico";
+
+    // Fade out dos fundos antigos
+    this.tweens.add({
+      targets: [this.back, this.fundo2], // pode adicionar outros se tiver
+      alpha: 0,
+      duration: 1000,
+      ease: "Linear",
+    });
+
+    // Aqui você deve garantir que tem o sprite do fundo "fantasmagorico"
+    this.fantasmagorico.setAlpha(0); // Começa invisível (se não tiver feito ainda)
+    this.tweens.add({
+      targets: this.fantasmagorico,
+      alpha: 1,
+      duration: 1000,
+      ease: "Linear",
+    });
+  } 
+
+  // Se quiser voltar para o fundo anterior ao voltar pra trás
+  else if (this.personagemLocal.x <= 14012.12 && this.fundoAtual === "fantasmagorico") {
+    this.fundoAtual = "back"; // ou outro fundo padrão que queira
+
+    this.tweens.add({
+      targets: this.fantasmagorico,
+      alpha: 0,
+      duration: 1000,
+      ease: "Linear",
+    });
+    this.tweens.add({
+      targets: [this.back, this.fundo2], // ou qual fundo for padrão
+      alpha: 1,
+      duration: 1000,
+      ease: "Linear",
+    });
+  }
+
     // Ativa o fantasma quando passa da posição desejada
  if (!this.fantasmaAtivado && this.personagemLocal.x > 14012.12) {
   this.fantasmaAtivado = true;
@@ -980,6 +1021,7 @@ if (this.fantasmaAtivado) {
     this.replayBuffer.shift();
   }
 }
+
     try {
       if (this.game.dadosJogo.readyState === "open") {
         if (this.personagemLocal) {
