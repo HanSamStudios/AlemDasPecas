@@ -57,6 +57,8 @@ export default class fase1 extends Phaser.Scene {
       frameHeight: 64,
     });
     this.load.audio("musicaa", "assets/musicaa.mp3");
+    this.load.audio("horror", "assets/horror.mp3");
+    this.load.audio("fantasma", "assets/fantasma.mp3");
     this.load.audio("dashsound", "assets/dashsound.mp3");
     this.load.audio("crystalsound", "assets/crystalsound.mp3");
     this.load.audio("jumpsound", "assets/jumpsound.mp3");
@@ -94,6 +96,8 @@ export default class fase1 extends Phaser.Scene {
       volume: 0.5, // volume entre 0 e 1
     });
     this.musica.play();
+
+    
     this.somMorte = this.sound.add("morte", {
       volume: 3,
     });
@@ -584,7 +588,9 @@ export default class fase1 extends Phaser.Scene {
   { x: 6538.24, y: 4333.27, cor: 0x00ffff },  // ciano
   { x: 8482.00, y: 3664.67, cor: 0xffffff },  // branco (sem mudança)
   { x: 10442.00, y: 3508.67, cor: 0xffa500 }, // laranja
-  { x: 11563.33, y: 3564.67, cor: 0x800080 }, // roxo
+  { x: 11978.00, y: 3395.33, cor: 0x800080 }, // roxo
+  { x: 15312.00, y: 3181.33, cor: 0xff0000 },  // verde
+  { x: 17170.67, y: 2542.67, cor: 0xffffff },  // branco (sem mudança)
 ];
 
 this.cristal.forEach((cristal) => {
@@ -742,8 +748,12 @@ this.plataforma.setVelocityX(100);         // começa se movendo pra direita
 // Colisão entre personagem e plataforma
 this.physics.add.collider(this.personagemLocal, this.plataforma);
 
+this.plataforma.setPosition(11750, this.plataforma.y);
+this.plataforma.setVelocityX(0); // começa parada
+this.plataformaAtiva = false;
+this.plataformaDirecao = 1;
 this.replayBuffer = [];
-this.ghostDelay = 45; // atraso em frames
+this.ghostDelay = 60; // atraso em frames
 this.fantasmaAtivado = false;
   this.personagemMorto = false;
 
@@ -759,16 +769,34 @@ this.fantasmaAtivado = false;
     this.somMorte.play();
     this.tratarDano();
   });
+  this.entrouNoCemiterio = false;
+  this.ghostTrailGroup = this.add.group();
 }
 
 
   update () {
-  if (this.plataforma.x > 12800) { // limite da direita
+const emCimaDaPlataforma =
+  this.personagemLocal.body.touching.down &&
+  this.plataforma.body.touching.up &&
+  this.personagemLocal.body.blocked.down;
+
+if (emCimaDaPlataforma && !this.plataformaAtiva) {
+  this.plataformaAtiva = true;
+  this.plataforma.setVelocityX(100); // começa indo pra direita
+  this.plataformaDirecao = 1;
+}
+
+if (this.plataformaAtiva) {
+  if (this.plataforma.x >= 12800 && this.plataformaDirecao === 1) {
     this.plataforma.setVelocityX(-100);
-  } else if (this.plataforma.x < 11750) { // limite da esquerda
-    this.plataforma.setVelocityX(100);
+    this.plataformaDirecao = -1;
+  } else if (this.plataforma.x <= 11750 && this.plataformaDirecao === -1) {
+    this.plataforma.setVelocityX(0);
+    this.plataformaAtiva = false; // desativa, esperando novo toque
   }
+}
     this.back.tilePositionX = this.cameras.main.scrollX * 0.3;
+    this.cavernaFundo.tilePositionX = this.cameras.main.scrollX * 0.3;
     this.cemiterio.tilePositionX = this.cameras.main.scrollX * 0.3;
     const angle = Phaser.Math.DegToRad(this.joystick.angle);
     const force = this.joystick.force;
@@ -954,11 +982,52 @@ this.fantasmaAtivado = false;
     }
   
     // Verifica se o personagem passou da coordenada x:14012.12 e troca para "cemiterio"
-if (this.personagemLocal.x > 14012.12 && this.fundoAtual !== "cemiterio") {
+const dentroDoCemiterio = this.personagemLocal.x > 14012.12;
+
+if (dentroDoCemiterio && !this.entrouNoCemiterio) {
+  this.entrouNoCemiterio = true;
+
   console.log("→ Entrando no cemitério");
   this.fundoAtual = "cemiterio";
 
-  this.cemiterio.setVisible(true); // <- ISSO FAZ VOLTAR A APARECER
+  this.musica.stop();
+  this.sound.play("fantasma", { loop: false });
+
+  // Mostrar texto "FUGA" imediatamente
+  this.time.delayedCall(1000, () => {
+  const fugaText = this.add.text(
+    this.cameras.main.centerX,
+    this.cameras.main.centerY,
+    "FUJA",
+    {
+      fontFamily: "game-over",
+      fontSize: "180px",
+      color: "#8B0000",
+      fontStyle: "bold",
+    }
+  )
+  .setDepth(2000)
+  .setOrigin(0.5)
+  .setScrollFactor(0);
+
+  this.tweens.add({
+    targets: fugaText,
+    alpha: 0,
+    duration: 50,
+    yoyo: true,
+    repeat: 3,
+    onComplete: () => {
+      fugaText.destroy();
+    }
+  });
+  });
+
+  this.time.delayedCall(4000, () => {
+    console.log("Tocando horror");
+    this.sound.play("horror", { volume: 10 });
+  });
+
+  this.cemiterio.setVisible(true);
 
   this.tweens.add({
     targets: this.back,
@@ -973,11 +1042,14 @@ if (this.personagemLocal.x > 14012.12 && this.fundoAtual !== "cemiterio") {
     duration: 1000,
     ease: "Linear",
   });
+}
+else if (!dentroDoCemiterio && this.entrouNoCemiterio) {
+  this.entrouNoCemiterio = false; // Reset para permitir tocar de novo se voltar
 
-} else if (this.personagemLocal.x < 14012.12 && this.cemiterio.alpha > 0) {
   console.log("→ Saindo do cemitério, escondendo fundo");
   this.fundoAtual = "back";
-
+  this.musica.play()
+  this.sound.stopByKey("horror");
   this.tweens.add({
     targets: this.cemiterio,
     alpha: 0,
@@ -988,6 +1060,7 @@ if (this.personagemLocal.x > 14012.12 && this.fundoAtual !== "cemiterio") {
       console.log("→ Cemitério escondido");
     }
   });
+
 
 
   const dentroZona = Phaser.Geom.Intersects.RectangleToRectangle(
@@ -1083,6 +1156,35 @@ if (this.fantasmaAtivado) {
     this.replayBuffer.shift();
   }
 }
+if (this.fantasmaAtivado && this.ghost) {
+  if (!this.lastTrailTime || this.time.now - this.lastTrailTime > 300) { // intervalo 50ms
+    this.lastTrailTime = this.time.now;
+
+    const trailSprite = this.add.sprite(this.ghost.x, this.ghost.y, "foxmal")
+      .setAlpha(0.5)
+      .setTint(0xff0000)  // aplica tint vermelho
+      .setFlipX(this.ghost.flipX)
+      .setDepth(this.ghost.depth - 1); // fica atrás do fantasma
+
+    this.ghostTrailGroup.add(trailSprite);
+
+    // Toca a animação que o fantasma está tocando
+    if (this.ghost.anims.currentAnim) {
+      trailSprite.anims.play(this.ghost.anims.currentAnim.key);
+    }
+
+    // Faz sumir em 500ms
+    this.tweens.add({
+      targets: trailSprite,
+      alpha: 0,
+      duration: 500,
+      onComplete: () => {
+        trailSprite.destroy();
+      }
+    });
+  }
+}
+
 
     try {
       if (this.game.dadosJogo.readyState === "open") {
