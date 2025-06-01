@@ -747,8 +747,8 @@ this.fullscreen = this.add.image(30, 30, "fullscreen")
   });
 
   this.plataforma = this.physics.add.sprite(11900.67, 3623.33, 'plataforma');
-this.plataforma.body.setSize(64, 52);
-this.plataforma.body.setOffset(0, 12); // 64 - 52 = 12, desloca a hitbox 12px para baixo
+this.plataforma.body.setSize(64, 56);
+this.plataforma.body.setOffset(0, 8); // 64 - 52 = 12, desloca a hitbox 12px para baixo
 
 
 // Configurações básicas
