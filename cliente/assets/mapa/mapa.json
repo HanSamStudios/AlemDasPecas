@@ -237,15 +237,15 @@
                 }, 
                 {
                  "height":0,
-                 "id":105,
+                 "id":107,
                  "name":"spawn",
                  "point":true,
                  "rotation":0,
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":13776,
-                 "y":3358
+                 "x":13970.6666666667,
+                 "y":3346.66666666667
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -1005,7 +1005,7 @@
          "y":0
         }],
  "nextlayerid":21,
- "nextobjectid":106,
+ "nextobjectid":108,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.11.2",

@@ -745,19 +745,23 @@ this.physics.add.collider(this.personagemLocal, this.plataforma);
 this.replayBuffer = [];
 this.ghostDelay = 45; // atraso em frames
 this.fantasmaAtivado = false;
+  this.personagemMorto = false;
 
-this.ghost = this.physics.add.sprite(0, 0, "foxmal").setSize(40, 50).setOffset(12, 14);
-this.ghost.setAlpha(0.5);
-this.ghost.setVisible(false); // só vai aparecer quando ativar
-this.ghost.body.allowGravity = false;
-this.ghost.setDepth(100); // atrás do personagem
+  this.ghost = this.physics.add.sprite(0, 0, "foxmal")
+    .setSize(40, 50)
+    .setOffset(12, 14)
+    .setAlpha(0.5)
+    .setVisible(true)
+    .setDepth(100);
+  this.ghost.body.allowGravity = false;
 
-this.physics.add.overlap(this.ghost, this.personagemLocal, () => {
-  // Função que mata a raposa
-  this.somMorte.play();
-  this.tratarDano();
-});
+  this.physics.add.overlap(this.ghost, this.personagemLocal, () => {
+    this.somMorte.play();
+    this.tratarDano();
+  });
 }
+
+
   update () {
   if (this.plataforma.x > 12800) { // limite da direita
     this.plataforma.setVelocityX(-100);
@@ -1024,14 +1028,30 @@ if (this.personagemLocal.x > 14012.12 && this.fundoAtual !== "cemiterio") {
   }
 }
 
-    // Ativa o fantasma quando passa da posição desejada
- if (!this.fantasmaAtivado && this.personagemLocal.x > 14012.12) {
-  this.fantasmaAtivado = true;
-  this.ghost.setVisible(true);
+    // Se o personagem estiver morto, desativa o fantasma e sai do update do fantasma
+if (this.personagemMorto) {
+  if (this.fantasmaAtivado) {
+    this.fantasmaAtivado = false;
+    if (this.ghost) {
+      this.ghost.setVisible(false);
+      this.ghost.body.enable = false; // Desativa colisão corretamente
+    }
+    this.replayBuffer = [];
+  }
+  return;
 }
 
+// Ativa o fantasma apenas se passar da posição X E estiver vivo
+if (!this.fantasmaAtivado && this.personagemLocal.x > 14012.12) {
+  this.fantasmaAtivado = true;
+  this.ghost.setVisible(true),
+  this.ghost.body.enable = true;
+  this.replayBuffer = [];
+}
+
+// Atualiza fantasma somente se ativado
 if (this.fantasmaAtivado) {
-  // Grava a posição, flip e animação atual do personagem no buffer
+  // Grava posição, flip e animação do personagem no buffer
   this.replayBuffer.push({
     x: this.personagemLocal.x,
     y: this.personagemLocal.y,
@@ -1041,29 +1061,25 @@ if (this.fantasmaAtivado) {
       : null
   });
 
-  // Limita tamanho do buffer (quantos frames armazenar)
+  // Limita tamanho do buffer (300 frames)
   if (this.replayBuffer.length > 300) {
     this.replayBuffer.shift();
   }
 
-  // Quando o buffer tiver frames suficientes, atualiza a posição do fantasma atrasado
+  // Atualiza posição do fantasma com atraso
   if (this.replayBuffer.length > this.ghostDelay) {
     const ghostData = this.replayBuffer[0];
 
     this.ghost.setPosition(ghostData.x, ghostData.y);
     this.ghost.flipX = ghostData.flipX;
 
-   if (ghostData.anim) {
-  // adiciona sufixo '-ghost' para usar animação do foxmal
-  const ghostAnimKey = ghostData.anim + "-ghost";
+    if (ghostData.anim) {
+      const ghostAnimKey = ghostData.anim + "-ghost";
+      if (this.ghost.anims.currentAnim?.key !== ghostAnimKey) {
+        this.ghost.anims.play(ghostAnimKey, true);
+      }
+    }
 
-  // só toca se for diferente da atual (pra não reiniciar a animação toda hora)
-  if (this.ghost.anims.currentAnim?.key !== ghostAnimKey) {
-    this.ghost.anims.play(ghostAnimKey, true);
-  }
-}
-
-    // Remove o frame usado do buffer
     this.replayBuffer.shift();
   }
 }
@@ -1167,68 +1183,82 @@ if (this.fantasmaAtivado) {
 
   }
 
-  tratarDano () {
-    if (this.personagemLocal.isInvulnerable) return;
-    this.levandoDano = true;
+  tratarDano() {
+  if (this.personagemLocal.isInvulnerable) return;
+  this.levandoDano = true;
 
-    // Diminuir vida ao tomar dano
-    if (this.vidas > 0) {
-      this.vidas--;
+  // Diminuir vida ao tomar dano
+  if (this.vidas > 0) {
+    this.vidas--;
 
-      // Esconder o coração perdido
-      if (this.coracoes[this.vidas]) {
-        this.coracoes[this.vidas].setVisible(false);
-      }
-
-      // Mostrar animação de dano no mesmo lugar do coração perdido
-      if (this.animacoesDano[this.vidas]) {
-        const animDano = this.animacoesDano[this.vidas];
-        animDano.setVisible(true);
-        animDano.anims.play("dano");
-
-        // Quando a animação terminar, esconder o sprite
-        animDano.on(
-          "animationcomplete",
-          () => {
-            animDano.setVisible(false);
-          },
-          this
-        );
-      }
+    // Esconder o coração perdido
+    if (this.coracoes[this.vidas]) {
+      this.coracoes[this.vidas].setVisible(false);
     }
 
-    if (this.vidas <= 0) {
-      this.atualizarVidas();
-      this.scene.start("final-perdeu");
-      return;
+    // Mostrar animação de dano no mesmo lugar do coração perdido
+    if (this.animacoesDano[this.vidas]) {
+      const animDano = this.animacoesDano[this.vidas];
+      animDano.setVisible(true);
+      animDano.anims.play("dano");
+      animDano.on("animationcomplete", () => {
+        animDano.setVisible(false);
+      }, this);
     }
-    this.atualizarVidas();
 
-    // Continua com o efeito de dano e invulnerabilidade
-    this.personagemLocal.isInvulnerable = true;
-    this.personagemLocal.setVelocity(0, 0);
-    this.personagemLocal.anims.play("personagem-dano", true);
-    this.personagemLocal.setTint(0xff7f7f);
-
-    const knockback = this.direcaoAtual === "direita" ? -150 : 150; // Ajustei para bater pra trás
-    this.personagemLocal.setVelocity(knockback, -200);
-
-    this.isDashing = true;
-    this.jumpPressed = false;
-
-    this.time.delayedCall(750, () => {
-      this.personagemLocal.clearTint();
-      this.personagemLocal.setPosition(this.spawnPoint.x, this.spawnPoint.y);
-      this.isDashing = false;
-      this.personagemLocal.isInvulnerable = false;
-
-      if (this.direcaoAtual === "direita") {
-        this.personagemLocal.anims.play("personagem-parado-direita", true);
-      } else {
-        this.personagemLocal.anims.play("personagem-parado-esquerda", true);
-      }
-    });
+    // **Aqui escondemos o fantasma e desativamos**
+    this.fantasmaAtivado = false;
+    if (this.ghost) {
+      this.ghost.setVisible(false),
+      this.ghost.body.enable = false;
+    }
+    this.replayBuffer = [];
   }
+
+  // Se morreu totalmente
+  if (this.vidas <= 0) {
+    this.personagemMorto = true;
+
+    // Se quiser destruir o fantasma ao morrer totalmente:
+    if (this.ghost) {
+      this.ghost.destroy();
+      this.ghost = null;
+    }
+
+    this.replayBuffer = [];
+
+    this.scene.start("final-perdeu");
+    return;
+  }
+
+  this.atualizarVidas();
+
+  // Continua com o efeito de dano e invulnerabilidade
+  this.personagemLocal.isInvulnerable = true;
+  this.personagemLocal.setVelocity(0, 0);
+  this.personagemLocal.anims.play("personagem-dano", true);
+  this.personagemLocal.setTint(0xff7f7f);
+
+  const knockback = this.direcaoAtual === "direita" ? -150 : 150; // bate pra trás
+  this.personagemLocal.setVelocity(knockback, -200);
+
+  this.isDashing = true;
+  this.jumpPressed = false;
+
+  this.time.delayedCall(750, () => {
+    this.personagemLocal.clearTint();
+    this.personagemLocal.setPosition(this.spawnPoint.x, this.spawnPoint.y);
+    this.isDashing = false;
+    this.personagemLocal.isInvulnerable = false;
+
+    if (this.direcaoAtual === "direita") {
+      this.personagemLocal.anims.play("personagem-parado-direita", true);
+    } else {
+      this.personagemLocal.anims.play("personagem-parado-esquerda", true);
+    }
+  });
+}
+
 
   createAnims () {
     this.anims.create({
