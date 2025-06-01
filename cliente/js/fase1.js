@@ -25,6 +25,7 @@ export default class fase1 extends Phaser.Scene {
   preload () {
     this.load.tilemapTiledJSON("mapa", "assets/mapa/mapa.json");
     this.load.image("arvore", "assets/mapa/arvore.png");
+    this.load.image("tp", "assets/mapa/tp.png");
     this.load.image("chao", "assets/mapa/chao.png");
     this.load.image("fantasm", "assets/mapa/fantasm.png");
     this.load.image("placaa", "assets/mapa/placaa.png");
@@ -90,7 +91,6 @@ export default class fase1 extends Phaser.Scene {
   }
 
   create () {
-    this.physics.world.createDebugGraphic();
     this.musica = this.sound.add("musicaa", {
       loop: true, // para repetir indefinidamente
       volume: 0.5, // volume entre 0 e 1
@@ -106,6 +106,7 @@ export default class fase1 extends Phaser.Scene {
     this.tilemapMapa = this.make.tilemap({ key: "mapa" });
 
     this.tilesetCasa = this.tilemapMapa.addTilesetImage("casa");
+    this.tilesetTp = this.tilemapMapa.addTilesetImage("tp");
     this.tilesetChao = this.tilemapMapa.addTilesetImage("chao", null, 64, 64);
      this.tilesetFantasm = this.tilemapMapa.addTilesetImage("fantasm", null, 64, 64);
     this.tilesetVaso = this.tilemapMapa.addTilesetImage("vaso", null, 64, 64);
@@ -143,7 +144,7 @@ export default class fase1 extends Phaser.Scene {
     this.fundoAtual = "back";
 
     this.layerChao = this.tilemapMapa
-      .createLayer("chao", [this.tilesetChao, this.tilesetFantasm])
+      .createLayer("chao", [this.tilesetChao, this.tilesetFantasm, this.tilesetTp])
       .setDepth(10);
     this.layerEspinhos = this.tilemapMapa
       .createLayer("espinhos", [this.tilesetEspinhos])
@@ -392,7 +393,8 @@ export default class fase1 extends Phaser.Scene {
       this.personagemLocal,
       this.espinhosCaindo,
       (player, espinho) => {
-        this.matarJogador(); // sua função de "game over" ou respawn
+        this.tratarDano()
+// sua função de "game over" ou respawn
 
         // Esconde e desativa física, sem destruir o objeto
         espinho.setVisible(false);
@@ -580,17 +582,23 @@ export default class fase1 extends Phaser.Scene {
     });
 
   this.cristal = [
-  { x: -1910.24, y: 3895.21, cor: 0x00ff00 }, // vermelho
-  { x: -501.15, y: 3898.24, cor: 0xff0000 },  // verde
-  { x: 1377.64, y: 3507.33, cor: 0x0000ff },  // azul
-  { x: 3214.0, y: 4137.64, cor: 0xffff00 },   // amarelo
-  { x: 4456.42, y: 3604.3, cor: 0xff00ff },   // rosa
-  { x: 6538.24, y: 4333.27, cor: 0x00ffff },  // ciano
-  { x: 8482.00, y: 3664.67, cor: 0xffffff },  // branco (sem mudança)
-  { x: 10442.00, y: 3508.67, cor: 0xffa500 }, // laranja
-  { x: 11978.00, y: 3395.33, cor: 0x800080 }, // roxo
-  { x: 15312.00, y: 3181.33, cor: 0xff0000 },  // verde
-  { x: 17170.67, y: 2542.67, cor: 0xffffff },  // branco (sem mudança)
+    { x: -2233.33, y: 3746.67, cor: 0xFF6666 }, // vermelho 
+  { x: -501.15, y: 3898.24, cor: 0x00ff00 },  // verde
+  { x: 1377.64, y: 3507.33, cor: 0x00ff00 },  // azul
+    { x: 2457.33, y: 4080.00, cor: 0xFF6666 },  // azul
+  { x: 3214.0, y: 4137.64, cor: 0x00ff00 },   // amarelo
+  { x: 4456.42, y: 3604.3, cor: 0x00ff00 },   // rosa
+  { x: 6551.58, y: 4333.27, cor: 0x00ff00 },  // ciano
+  { x: 6992.00, y: 4540.00, cor: 0xFF6666  },  // ciano
+    { x: 8034.67, y: 4356.00, cor: 0xFF6666  },  // ciano
+  { x: 8482.00, y: 3664.67, cor: 0x00ff00 },  // branco (sem mudança)
+  { x: 10442.00, y: 3508.67, cor: 0x00ff00 }, // laranja
+  { x: 11978.00, y: 3395.33, cor: 0x00ff00 }, // roxo
+   { x: 13281.33, y: 4369.33, cor: 0xFF66660 }, // roxo
+  { x: 15312.00, y: 3181.33, cor: 0x00ff00 },  // verde
+   { x: 16725.33, y: 3490.67, cor: 0xFF66660 },  // verde
+  { x: 17170.67, y: 2542.67, cor: 0x00ff00 }, 
+  { x: 17460.00, y: 3218.67, cor: 0xFF66660 },  // branco (sem mudança)
 ];
 
 this.cristal.forEach((cristal) => {
@@ -739,6 +747,9 @@ this.fullscreen = this.add.image(30, 30, "fullscreen")
   });
 
   this.plataforma = this.physics.add.sprite(11900.67, 3623.33, 'plataforma');
+this.plataforma.body.setSize(64, 52);
+this.plataforma.body.setOffset(0, 12); // 64 - 52 = 12, desloca a hitbox 12px para baixo
+
 
 // Configurações básicas
 this.plataforma.body.allowGravity = false; // plataforma não cai
@@ -771,6 +782,28 @@ this.fantasmaAtivado = false;
   });
   this.entrouNoCemiterio = false;
   this.ghostTrailGroup = this.add.group();
+
+
+   const teleportes = this.tilemapMapa.getObjectLayer("tp").objects;
+
+  teleportes.forEach((obj) => {
+    const teleporte = this.add.zone(obj.x, obj.y, obj.width, obj.height)
+      .setOrigin(0)
+      .setName(obj.name);
+
+    this.physics.world.enable(teleporte);
+    teleporte.body.setAllowGravity(false);
+    teleporte.body.moves = false;
+
+    this.physics.add.overlap(this.personagemLocal, teleporte, () => {
+      if (teleporte.name === "tp1") {
+        this.personagemLocal.setPosition(7509.33, 4204.00);
+      } else if (teleporte.name === "tp2") {
+        this.personagemLocal.setPosition(11598.67, 3565.33);
+      }
+    });
+  });
+
 }
 
 
@@ -1335,31 +1368,40 @@ if (this.fantasmaAtivado && this.ghost) {
 
   this.atualizarVidas();
 
+  
   // Continua com o efeito de dano e invulnerabilidade
   this.personagemLocal.isInvulnerable = true;
   this.personagemLocal.setVelocity(0, 0);
   this.personagemLocal.anims.play("personagem-dano", true);
   this.personagemLocal.setTint(0xff7f7f);
 
-  const knockback = this.direcaoAtual === "direita" ? -150 : 150; // bate pra trás
-  this.personagemLocal.setVelocity(knockback, -200);
+const knockback = this.direcaoAtual === "direita" ? -150 : 150; // bate pra trás
+this.personagemLocal.setVelocity(knockback, -200);
 
-  this.isDashing = true;
-  this.jumpPressed = false;
+this.isDashing = true;
+this.jumpPressed = false;
 
-  this.time.delayedCall(750, () => {
+this.time.delayedCall(750, () => {
+  if (this.entrouNoCemiterio) {
+    this.personagemLocal.setPosition(13138.67, 3389.33);
+    this.personagemLocal.setVelocity(0, 0); // reseta movimento
+     this.personagemLocal.clearTint();
+  } else {
     this.personagemLocal.clearTint();
     this.personagemLocal.setPosition(this.spawnPoint.x, this.spawnPoint.y);
-    this.isDashing = false;
-    this.personagemLocal.isInvulnerable = false;
+  }
 
-    if (this.direcaoAtual === "direita") {
-      this.personagemLocal.anims.play("personagem-parado-direita", true);
-    } else {
-      this.personagemLocal.anims.play("personagem-parado-esquerda", true);
-    }
-  });
-}
+  this.isDashing = false;
+  this.personagemLocal.isInvulnerable = false;
+
+  // Animação após o respawn
+  if (this.direcaoAtual === "direita") {
+    this.personagemLocal.anims.play("personagem-parado-direita", true);
+  } else {
+    this.personagemLocal.anims.play("personagem-parado-esquerda", true);
+  }
+});
+  }
 
 
   createAnims () {
