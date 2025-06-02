@@ -331,18 +331,19 @@ export default class fase1 extends Phaser.Scene {
       if (dados.gameOver) {
         this.scene.start("final-perdeu");
       }
-
-      if (dados.cristal) {
-        this.cristal.forEach((cristal, i) => {
-          if (dados.cristal[i].visivel) {
-            cristal.objeto.enableBody(false, cristal.x, cristal.y, true, true);
-            cristal.objeto.setAlpha(1);
-            cristal.objeto.setScale(1);
-          } else {
-            cristal.objeto.disableBody(true, true);
-          }
-        });
+if (dados.cristal) {
+  this.cristal.forEach((cristal, i) => {
+    if (cristal.objeto && cristal.objeto.body) {
+      if (dados.cristal[i].visivel) {
+        cristal.objeto.enableBody(false, cristal.x, cristal.y, true, true);
+        cristal.objeto.setAlpha(1);
+        cristal.objeto.setScale(1);
+      } else {
+        cristal.objeto.disableBody(true, true);
       }
+    }
+  });
+}
 
       if (dados.passarinho) {
         this.passarinho.x = dados.passarinho.x;
@@ -1379,6 +1380,9 @@ export default class fase1 extends Phaser.Scene {
       this.game.dadosJogo.send(JSON.stringify(dados));
     }
 
+  if (this.jogoFinalizado) return;  // para não mexer no personagem após fim
+  // resto do update
+
     // Também aqui pode ir a lógica do "pulão":
     this.physics.add.overlap(
       this.personagemLocal,
@@ -1404,6 +1408,7 @@ export default class fase1 extends Phaser.Scene {
         }
       }
     );
+    
   }
 
   tratarDano () {
@@ -1849,9 +1854,18 @@ export default class fase1 extends Phaser.Scene {
         });
   
         // Ir para cena final
-        this.time.delayedCall(9000, () => {
-          this.scene.start("final-acabado");
-        });
+       this.time.delayedCall(9000, () => {
+  if (this.personagemLocal && this.personagemLocal.body) {
+    this.personagemLocal.body.enable = false;  // desativa o corpo
+    this.physics.world.disable(this.personagemLocal); // desabilita física
+      this.tweens.killTweensOf(this.personagemLocal);
+
+  // Se você criou algum evento de tempo no personagem, cancele aqui
+  this.time.removeAllEvents();
+  }
+  this.scene.start("final-acabado", { pontuacao: this.pontuacao });
+});
+
       }
     });
   }
