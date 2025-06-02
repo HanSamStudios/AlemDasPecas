@@ -312,6 +312,21 @@ export default class fase1 extends Phaser.Scene {
         this.jogoFinalizado = true;
         this.finalizarJogoLocal();
       }
+      if (dados.type === "pontuacao") {
+  this.pontuacao = dados.pontuacao;
+
+  if (dados.cristal) {
+    this.cristal.forEach((cristal, i) => {
+      if (dados.cristal[i].visivel) {
+        cristal.objeto.enableBody(false, cristal.x, cristal.y, true, true);
+        cristal.objeto.setAlpha(1);
+        cristal.objeto.setScale(1);
+      } else {
+        cristal.objeto.disableBody(true, true);
+      }
+    });
+  }
+}
 
       if (dados.personagem) {
         this.personagemRemoto.x = dados.personagem.x;
@@ -628,6 +643,7 @@ if (dados.cristal) {
       { x: 17170.67, y: 2542.67, cor: 0x00ff00 },
       { x: 17460.0, y: 3218.67, cor: 0xff66660 }, // branco (sem mudança)
       { x: 18416.0, y: 2338.0, cor: 0x00ff00 }, // branco (sem mudança)
+      { x: 19038.00, y: 2250.00, cor: 0x00ff00 }, // branco (sem mudança)
     ];
 
     this.cristal.forEach((cristal) => {
@@ -643,6 +659,7 @@ if (dados.cristal) {
         this.personagemLocal,
         cristal.objeto,
         (personagem, cristal) => {
+          cristal.disableBody(true, true);
           this.tweens.add({
             targets: cristal,
             scale: 0,
@@ -654,6 +671,17 @@ if (dados.cristal) {
           });
           this.sound.play("crystalsound");
           this.pontuacao += 1;
+          console.log("[CRISTAL] Cristal coletado. Pontuação atual:", this.pontuacao);
+          if (this.game.dadosJogo && this.game.dadosJogo.readyState === "open") {
+  this.game.dadosJogo.send(
+    JSON.stringify({
+      type: "pontuacao",
+      pontuacao: this.pontuacao,
+      cristal: this.cristal.map(c => ({ visivel: c.objeto.visible }))
+    })
+  );
+}
+
           const rainbowColors = [
             0xff0000, // vermelho
             0xff7f00, // laranja
@@ -834,6 +862,7 @@ if (dados.cristal) {
       });
     });
 
+    this.pontuacao = 0;
     this.jogoFinalizado = false;
     this.horrorScheduled = false;
     this.fantasmaFinalizado = false;
@@ -1834,7 +1863,7 @@ if (dados.cristal) {
         const princesaText = this.add.text(
           this.cameras.main.centerX,
           130,
-          "mas a princesa está em outro castelo",
+          "mas a princesa esta em outro castelo",
           {
             fontFamily: "game-over",
             fontSize: "15px",
@@ -1855,13 +1884,9 @@ if (dados.cristal) {
   
         // Ir para cena final
        this.time.delayedCall(9000, () => {
+         console.log("[FINALIZAÇÃO] Enviando para final-acabado com pontuação:", this.pontuacao);
   if (this.personagemLocal && this.personagemLocal.body) {
     this.personagemLocal.body.enable = false;  // desativa o corpo
-    this.physics.world.disable(this.personagemLocal); // desabilita física
-      this.tweens.killTweensOf(this.personagemLocal);
-
-  // Se você criou algum evento de tempo no personagem, cancele aqui
-  this.time.removeAllEvents();
   }
   this.scene.start("final-acabado", { pontuacao: this.pontuacao });
 });
