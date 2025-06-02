@@ -1163,6 +1163,12 @@ this.cristal.forEach((cristal, index) => {
     if (this.personagemLocal.x > 19133 && !this.jogoFinalizado) {
       this.jogoFinalizado = true;
 
+       const dadosFinal = {
+    type: "finalizou",
+    pontuacao: this.pontuacao,
+    verdes: this.cristaisContagem.verde,
+    vermelhos: this.cristaisContagem.vermelho
+  };
       if (this.game.dadosJogo && this.game.dadosJogo.readyState === "open") {
         this.game.dadosJogo.send(JSON.stringify({ type: "finalizou" }));
       }
@@ -2095,9 +2101,9 @@ finalizarJogoRemoto(pontuacao, verdes, vermelhos) {
             console.log("[REMOTO] Trocando para 'final-acabado'");
           this.scene.start("final-acabado", {
             
-           pontuacao: this.pontuacao,
-            verdes: this.cristaisContagem.verde,
-            vermelhos: this.cristaisContagem.vermelho,
+             pontuacao,
+      verdes,
+      vermelhos
           });
         }
       });
