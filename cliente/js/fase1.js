@@ -313,6 +313,8 @@ export default class fase1 extends Phaser.Scene {
   console.log("→ Recebido sinal de finalização do outro jogador");
   this.jogoFinalizado = true;
 
+  
+
   const totalVerdes = dados.verdes ?? 0;
 const totalVermelhos = dados.vermelhos ?? 0;
 const pontuacao = dados.pontuacao ?? 0;
@@ -320,33 +322,44 @@ const pontuacao = dados.pontuacao ?? 0;
   if (this.personagemLocal?.body) {
     this.personagemLocal.body.enable = false;
   }
+ this.finalizarJogoRemoto(dados.pontuacao, dados.verdes ?? 0, dados.vermelhos ?? 0);
+  
+}
+     if (dados.type === "pontuacao") {
+  console.log("[RECEBIDO PONTUAÇÃO]", dados);
 
-  if (totalVerdes === 11 && totalVermelhos === 7) {
-    console.log("[FINALIZAÇÃO REMOTA] Pegou todos! Indo para 'detonou'");
-    this.scene.start("detonou");
-  } else {
-    console.log("[FINALIZAÇÃO REMOTA] Indo para 'final-acabado'");
-    this.scene.start("final-acabado", {
-      pontuacao: this.pontuacao,
-      verdes: totalVerdes,
-      vermelhos: totalVermelhos,
+  this.pontuacao = dados.pontuacao;
+  this.cristaisContagem.verde = dados.verdes || 0;
+  this.cristaisContagem.vermelho = dados.vermelhos || 0;
+
+ if (dados.type === "cristal-coletado") {
+  const index = dados.index;
+  const cristal = this.cristal?.[index];
+  if (cristal && !cristal.coletado) {
+    cristal.coletado = true;
+    cristal.objeto.disableBody(true, true);
+
+    this.tweens.add({
+      targets: cristal.objeto,
+      scale: 0,
+      alpha: 0,
+      duration: 300,
     });
+
+    const tint = dados.cor;
+    if (tint === 0x00ff00) {
+      this.cristaisContagem.verde += 1;
+    } else if (tint === 0xff6666) {
+      this.cristaisContagem.vermelho += 1;
+    }
+
+    console.log("[CRISTAL REMOTO] Coletado index:", index);
   }
 }
-      if (dados.type === "pontuacao") {
-  this.pontuacao = dados.pontuacao;
 
-  if (dados.cristal) {
-    this.cristal.forEach((cristal, i) => {
-      if (dados.cristal[i].visivel) {
-        cristal.objeto.enableBody(false, cristal.x, cristal.y, true, true);
-        cristal.objeto.setAlpha(1);
-        cristal.objeto.setScale(1);
-      } else {
-        cristal.objeto.disableBody(true, true);
-      }
-    });
-  }
+
+
+
 }
 
       if (dados.personagem) {
@@ -355,29 +368,46 @@ const pontuacao = dados.pontuacao ?? 0;
         this.personagemRemoto.setFrame(dados.personagem.frame);
       }
 
- if (dados.vidas !== undefined) {
-  this.vidasRemotas = dados.vidas; // agora não sobrescreve suas próprias vidas
+ if (dados.type === "vidas" && dados.vidas !== undefined) {
+  if (dados.vidas < this.vidas) {
+    this.vidas = dados.vidas;
+    this.atualizarVidas();    // atualize a UI local também
 }
+ }
 
 if (dados.gameOver && !this.jogoFinalizado) {
   this.jogoFinalizado = true;
   this.scene.start("final-perdeu");
 }
 
+if (dados.type === "cristal-coletado") {
+  const index = dados.index;
+  const cristal = this.cristal?.[index];
 
-if (dados.cristal) {
-  this.cristal.forEach((cristal, i) => {
-    if (cristal.objeto && cristal.objeto.body) {
-      if (dados.cristal[i].visivel) {
-        cristal.objeto.enableBody(false, cristal.x, cristal.y, true, true);
-        cristal.objeto.setAlpha(1);
-        cristal.objeto.setScale(1);
-      } else {
+  if (cristal && !cristal.coletado) {
+    cristal.coletado = true;
+
+    this.tweens.add({
+      targets: cristal.objeto,
+      alpha: 0,
+      scale: 0,
+      duration: 300,
+      onComplete: () => {
         cristal.objeto.disableBody(true, true);
       }
+    });
+
+    // Atualiza a contagem remota se quiser
+    if (dados.cor === 0x00ff00) {
+      this.cristaisContagem.verde += 1;
+    } else if (dados.cor === 0xff6666) {
+      this.cristaisContagem.vermelho += 1;
     }
-  });
+
+    console.log(`[SYNC] Cristal #${index} escondido remotamente`);
+  }
 }
+
 
       if (dados.passarinho) {
         this.passarinho.x = dados.passarinho.x;
@@ -669,7 +699,7 @@ if (dados.cristal) {
   vermelho: 0
 };
 
-this.cristal.forEach((cristal) => {
+this.cristal.forEach((cristal, index) => {
   cristal.objeto = this.physics.add.sprite(cristal.x, cristal.y, "crystal");
   cristal.objeto.body.setAllowGravity(false);
   cristal.objeto.play("crystal_spin");
@@ -678,70 +708,83 @@ this.cristal.forEach((cristal) => {
 
   this.physics.add.collider(cristal.objeto, this.layerChao);
   this.physics.add.overlap(
-    this.personagemLocal,
-    cristal.objeto,
-    (personagem, cristal) => {
-      cristal.disableBody(true, true);
+  this.personagemLocal,
+  cristal.objeto,
+  (personagem, sprite) => {
+    // Buscar o objeto original da lista
+    const cristal = this.cristal.find(c => c.objeto === sprite);
+    if (!cristal || cristal.coletado) return;
+    cristal.coletado = true;
 
-      this.tweens.add({
-        targets: cristal,
-        scale: 0,
-        alpha: 0,
-        duration: 300,
-        onComplete: () => {
-          cristal.disableBody(true, true);
-        },
-      });
+    cristal.objeto.disableBody(true, true);
 
-      this.sound.play("crystalsound");
-      this.pontuacao += 1;
-
-      // Verifica a cor do cristal coletado
-      const tint = cristal.tintTopLeft;
-      if (tint === 0x00ff00) {
-        this.cristaisContagem.verde += 1;
-        console.log("[CRISTAL] Verde coletado:", this.cristaisContagem.verde);
-      } else if (tint === 0xff6666) {
-        this.cristaisContagem.vermelho += 1;
-        console.log("[CRISTAL] Vermelho coletado:", this.cristaisContagem.vermelho);
-      }
-
-      console.log("[CRISTAL] Total:", this.pontuacao);
-
-      if (this.game.dadosJogo && this.game.dadosJogo.readyState === "open") {
-        this.game.dadosJogo.send(
-          JSON.stringify({
-            type: "pontuacao",
-            pontuacao: this.pontuacao,
-            verdes: this.cristaisContagem.verde,
-            vermelhos: this.cristaisContagem.vermelho,
-            cristal: this.cristal.map(c => ({ visivel: c.objeto.visible }))
-          })
-        );
-      }
-
-      // Efeito arco-íris
-      const rainbowColors = [0xff0000, 0xff7f00, 0xffff00, 0x00ff00, 0x0000ff, 0x4b0082, 0x8f00ff];
-      let colorIndex = 0;
-
-      const colorEvent = this.time.addEvent({
-        delay: 50,
-        loop: true,
-        callback: () => {
-          this.personagemLocal.setTint(rainbowColors[colorIndex]);
-          colorIndex = (colorIndex + 1) % rainbowColors.length;
-        },
-      });
-
-      this.time.delayedCall(700, () => {
-        colorEvent.remove(false);
-        this.personagemLocal.clearTint();
-      });
-    },
-    null,
-    this
+    if (this.game.dadosJogo && this.game.dadosJogo.readyState === "open") {
+  this.game.dadosJogo.send(
+    JSON.stringify({
+      type: "cristal-coletado",
+      index: index, // ← manda o índice
+      cor: cristal.cor
+    })
   );
-});
+}
+
+    this.tweens.add({
+      targets: cristal.objeto,
+      scale: 0,
+      alpha: 0,
+      duration: 300,
+      onComplete: () => {
+        cristal.objeto.disableBody(true, true);
+      },
+    });
+
+    this.sound.play("crystalsound");
+    this.pontuacao += 1;
+
+    const tint = cristal.cor; // agora usa a cor original corretamente
+    if (tint === 0x00ff00) {
+      this.cristaisContagem.verde += 1;
+      console.log("[CRISTAL] Verde coletado:", this.cristaisContagem.verde);
+    } else if (tint === 0xff6666) {
+      this.cristaisContagem.vermelho += 1;
+      console.log("[CRISTAL] Vermelho coletado:", this.cristaisContagem.vermelho);
+    }
+
+    console.log("[CRISTAL] Total:", this.pontuacao);
+
+    if (this.game.dadosJogo && this.game.dadosJogo.readyState === "open") {
+      this.game.dadosJogo.send(
+        JSON.stringify({
+          type: "pontuacao",
+          pontuacao: this.pontuacao,
+          verdes: this.cristaisContagem.verde,
+          vermelhos: this.cristaisContagem.vermelho,
+          cristal: this.cristal.map(c => ({ visivel: c.objeto.visible }))
+        })
+      );
+    }
+
+    // Efeito arco-íris
+    const rainbowColors = [0xff0000, 0xff7f00, 0xffff00, 0x00ff00, 0x0000ff, 0x4b0082, 0x8f00ff];
+    let colorIndex = 0;
+
+    const colorEvent = this.time.addEvent({
+      delay: 50,
+      loop: true,
+      callback: () => {
+        this.personagemLocal.setTint(rainbowColors[colorIndex]);
+        colorIndex = (colorIndex + 1) % rainbowColors.length;
+      },
+    });
+
+    this.time.delayedCall(700, () => {
+      colorEvent.remove(false);
+      this.personagemLocal.clearTint();
+    });
+  },
+  null,
+  this
+  )})
 
     this.checarUI = () => {
       const elementosUI = [
@@ -1492,15 +1535,26 @@ tratarDano() {
       );
     }
 
-    this.atualizarVidas()
+    this.atualizarVidas();
 
-     if (this.vidas <= 0 && !this.jogoFinalizado) {
+    // **Enviar vida atualizada para o outro jogador**
+    if (this.game.dadosJogo && this.game.dadosJogo.readyState === "open") {
+      this.game.dadosJogo.send(
+        JSON.stringify({
+          type: "vidas",    // importante ter o type para identificar a mensagem
+          vidas: this.vidas
+        })
+      );
+    }
+
+    if (this.vidas <= 0 && !this.jogoFinalizado) {
       this.jogoFinalizado = true;
 
-      // Enviar explicitamente o gameOver para garantir
+      // Enviar explicitamente gameOver para garantir
       if (this.game.dadosJogo && this.game.dadosJogo.readyState === "open") {
         this.game.dadosJogo.send(
           JSON.stringify({
+            type: "gameOver",
             vidas: this.vidas,
             gameOver: true,
           })
@@ -1867,98 +1921,188 @@ tratarDano() {
     }
   }
 
-  finalizarJogoLocal () {
-    // Garante que a música volta ao normal
-    this.fundoAtual = "back";
-    this.sound.stopByKey("horror");
-    this.musica.play();
-  
-    // Esconde o cemitério
-    this.tweens.add({
-      targets: this.cemiterio,
-      alpha: 0,
-      duration: 1000,
-      ease: "Linear",
-      onComplete: () => {
-        this.cemiterio.setVisible(false);
-        console.log("→ Cemitério escondido");
-  
-        // Mensagem "obrigado"
-        const obrigadoText = this.add.text(
-          this.cameras.main.centerX,
-          80,
-          "Obrigado por jogar",
-          {
-            fontFamily: "game-over",
-            fontSize: "35px",
-            color: "#FFFFFF",
-            fontStyle: "bold",
-            stroke: "#000000",
-            strokeThickness: 4
-          }
-        ).setDepth(3000).setOrigin(0.5).setScrollFactor(0).setAlpha(0);
-  
-        this.tweens.add({
-          targets: obrigadoText,
-          alpha: 1,
-          duration: 1500,
-          ease: "Linear",
-          delay: 500
-        });
-  
-        // Mensagem da princesa
-        const princesaText = this.add.text(
-          this.cameras.main.centerX,
-          130,
-          "mas a princesa esta em outro castelo",
-          {
-            fontFamily: "game-over",
-            fontSize: "15px",
-            color: "#FFA500",
-            fontStyle: "bold",
-            stroke: "#000000",
-            strokeThickness: 4
-          }
-        ).setDepth(3000).setOrigin(0.5).setScrollFactor(0).setAlpha(0);
-  
-        this.tweens.add({
-          targets: princesaText,
-          alpha: 1,
-          duration: 1500,
-          ease: "Linear",
-          delay: 2000
-        });
-  
-        // Ir para cena final
-  this.time.delayedCall(9000, () => {
-  const totalVerdes = this.cristaisContagem.verde || 0;
-  const totalVermelhos = this.cristaisContagem.vermelho || 0;
+ finalizarJogoLocal() {
+  // Garante que a música volta ao normal
+  this.fundoAtual = "back";
+  this.sound.stopByKey("horror");
+  this.musica.play();
 
-  if (this.personagemLocal && this.personagemLocal.body) {
-    this.personagemLocal.body.enable = false;
-  }
+  // Esconde o cemitério
+  this.tweens.add({
+    targets: this.cemiterio,
+    alpha: 0,
+    duration: 1000,
+    ease: "Linear",
+    onComplete: () => {
+      this.cemiterio.setVisible(false);
+      console.log("→ Cemitério escondido");
 
-  // → Enviar para o outro jogador que acabou
-  if (this.game.dadosJogo?.readyState === "open") {
-    this.game.dadosJogo.send(JSON.stringify({ type: "finalizou" }));
-  }
+      // Mensagem "obrigado"
+      const obrigadoText = this.add.text(
+        this.cameras.main.centerX,
+        80,
+        "Obrigado por jogar",
+        {
+          fontFamily: "game-over",
+          fontSize: "35px",
+          color: "#FFFFFF",
+          fontStyle: "bold",
+          stroke: "#000000",
+          strokeThickness: 4,
+        }
+      )
+        .setDepth(3000)
+        .setOrigin(0.5)
+        .setScrollFactor(0)
+        .setAlpha(0);
 
-  if (totalVerdes === 11 && totalVermelhos === 7) {
-    console.log("[FINALIZAÇÃO] Pegou todos! Enviando para 'detonou'");
-    this.scene.start("detonou");
-  } else {
-    console.log("[FINALIZAÇÃO] Enviando para 'final-acabado'");
-    this.scene.start("final-acabado", {
-      pontuacao: this.pontuacao,
-      verdes: totalVerdes,
-      vermelhos: totalVermelhos,
-    });
-  }
-});
+      this.tweens.add({
+        targets: obrigadoText,
+        alpha: 1,
+        duration: 1500,
+        ease: "Linear",
+        delay: 500,
+      });
 
+      // Mensagem da princesa
+      const princesaText = this.add.text(
+        this.cameras.main.centerX,
+        130,
+        "mas a princesa esta em outro castelo",
+        {
+          fontFamily: "game-over",
+          fontSize: "15px",
+          color: "#FFA500",
+          fontStyle: "bold",
+          stroke: "#000000",
+          strokeThickness: 4,
+        }
+      )
+        .setDepth(3000)
+        .setOrigin(0.5)
+        .setScrollFactor(0)
+        .setAlpha(0);
 
+      this.tweens.add({
+        targets: princesaText,
+        alpha: 1,
+        duration: 1500,
+        ease: "Linear",
+        delay: 2000,
+      });
 
+      // Envia mensagem de finalização para o outro jogador
+      if (this.game.dadosJogo?.readyState === "open") {
+        this.game.dadosJogo.send(
+          JSON.stringify({
+            type: "finalizou",
+            pontuacao: this.pontuacao,
+            verdes: this.cristaisContagem.verde,
+            vermelhos: this.cristaisContagem.vermelho,
+          })
+        );
       }
-    });
-  }
-}  
+
+      // Aguarda 4 segundos antes de trocar de cena, para mostrar as mensagens
+      this.time.delayedCall(7000, () => {
+        if (
+          this.cristaisContagem.verde === 11 &&
+          this.cristaisContagem.vermelho === 7
+        ) {
+          this.scene.start("detonou");
+        } else {
+          this.scene.start("final-acabado", {
+            pontuacao: this.pontuacao,
+            verdes: this.cristaisContagem.verde,
+            vermelhos: this.cristaisContagem.vermelho,
+          });
+        }
+      });
+    },
+  });
+}
+finalizarJogoRemoto(pontuacao, verdes, vermelhos) {
+  this.fundoAtual = "back";
+  this.sound.stopByKey("horror");
+  this.musica.play();
+
+  this.tweens.add({
+    targets: this.cemiterio,
+    alpha: 0,
+    duration: 1000,
+    ease: "Linear",
+    onComplete: () => {
+      this.cemiterio.setVisible(false);
+      console.log("→ Cemitério escondido (remoto)");
+
+      const obrigadoText = this.add.text(
+        this.cameras.main.centerX,
+        80,
+        "Obrigado por jogar",
+        {
+          fontFamily: "game-over",
+          fontSize: "35px",
+          color: "#FFFFFF",
+          fontStyle: "bold",
+          stroke: "#000000",
+          strokeThickness: 4,
+        }
+      )
+        .setDepth(3000)
+        .setOrigin(0.5)
+        .setScrollFactor(0)
+        .setAlpha(0);
+
+      this.tweens.add({
+        targets: obrigadoText,
+        alpha: 1,
+        duration: 1500,
+        ease: "Linear",
+        delay: 500,
+      });
+
+      const princesaText = this.add.text(
+        this.cameras.main.centerX,
+        130,
+        "mas a princesa esta em outro castelo",
+        {
+          fontFamily: "game-over",
+          fontSize: "15px",
+          color: "#FFA500",
+          fontStyle: "bold",
+          stroke: "#000000",
+          strokeThickness: 4,
+        }
+      )
+        .setDepth(3000)
+        .setOrigin(0.5)
+        .setScrollFactor(0)
+        .setAlpha(0);
+
+      this.tweens.add({
+        targets: princesaText,
+        alpha: 1,
+        duration: 1500,
+        ease: "Linear",
+        delay: 2000,
+      });
+
+      this.time.delayedCall(7000, () => {
+        if (verdes === 11 && vermelhos === 7) {
+            console.log("[REMOTO] Trocando para 'detonou'");
+          this.scene.start("detonou");
+        } else {
+            console.log("[REMOTO] Trocando para 'final-acabado'");
+          this.scene.start("final-acabado", {
+            
+           pontuacao: this.pontuacao,
+            verdes: this.cristaisContagem.verde,
+            vermelhos: this.cristaisContagem.vermelho,
+          });
+        }
+      });
+    },
+  });
+}
+
+}
