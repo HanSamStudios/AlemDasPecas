@@ -7,6 +7,7 @@ import sala from "./sala.js";
 import fase1 from "./fase1.js";
 import finalacabado from "./final-acabado.js";
 import finalperdeu from "./final-perdeu.js";
+import detonou from "./detonou.js";
 
 class Game extends Phaser.Game {
   constructor() {
@@ -35,6 +36,7 @@ class Game extends Phaser.Game {
     this.scene.add("fase1", fase1);
     this.scene.add("finalacabado", finalacabado);
     this.scene.add("finalperdeu", finalperdeu);
+    this.scene.add("detonou", detonou);
     this.scene.start("abertura");
   }
 }

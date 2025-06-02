@@ -99,6 +99,8 @@ export default class fase1 extends Phaser.Scene {
   }
 
   create () {
+    
+
     this.musica = this.sound.add("musicaa", {
       loop: true, // para repetir indefinidamente
       volume: 0.5, // volume entre 0 e 1
@@ -307,11 +309,30 @@ export default class fase1 extends Phaser.Scene {
     this.game.dadosJogo.onmessage = (event) => {
       const dados = JSON.parse(event.data);
 
-      if (dados.type === "finalizou" && !this.jogoFinalizado) {
-        console.log("→ Recebido sinal de finalização do outro jogador");
-        this.jogoFinalizado = true;
-        this.finalizarJogoLocal();
-      }
+     if (dados.type === "finalizou" && !this.jogoFinalizado) {
+  console.log("→ Recebido sinal de finalização do outro jogador");
+  this.jogoFinalizado = true;
+
+  const totalVerdes = dados.verdes ?? 0;
+const totalVermelhos = dados.vermelhos ?? 0;
+const pontuacao = dados.pontuacao ?? 0;
+
+  if (this.personagemLocal?.body) {
+    this.personagemLocal.body.enable = false;
+  }
+
+  if (totalVerdes === 11 && totalVermelhos === 7) {
+    console.log("[FINALIZAÇÃO REMOTA] Pegou todos! Indo para 'detonou'");
+    this.scene.start("detonou");
+  } else {
+    console.log("[FINALIZAÇÃO REMOTA] Indo para 'final-acabado'");
+    this.scene.start("final-acabado", {
+      pontuacao: this.pontuacao,
+      verdes: totalVerdes,
+      vermelhos: totalVermelhos,
+    });
+  }
+}
       if (dados.type === "pontuacao") {
   this.pontuacao = dados.pontuacao;
 
@@ -637,83 +658,93 @@ if (dados.cristal) {
       { x: 8482.0, y: 3664.67, cor: 0x00ff00 }, // branco (sem mudança)
       { x: 10442.0, y: 3508.67, cor: 0x00ff00 }, // laranja
       { x: 11978.0, y: 3395.33, cor: 0x00ff00 }, // roxo
-      { x: 13281.33, y: 4369.33, cor: 0xff66660 }, // roxo
+      { x: 13281.33, y: 4369.33, cor: 0xff6666 }, // roxo
       { x: 15312.0, y: 3181.33, cor: 0x00ff00 }, // verde
-      { x: 16725.33, y: 3490.67, cor: 0xff66660 }, // verde
+      { x: 16725.33, y: 3490.67, cor: 0xff6666 }, // verde
       { x: 17170.67, y: 2542.67, cor: 0x00ff00 },
-      { x: 17460.0, y: 3218.67, cor: 0xff66660 }, // branco (sem mudança)
+      { x: 17460.0, y: 3218.67, cor: 0xff6666 }, // branco (sem mudança)
       { x: 18416.0, y: 2338.0, cor: 0x00ff00 }, // branco (sem mudança)
-      { x: 19038.00, y: 2250.00, cor: 0x00ff00 }, // branco (sem mudança)
     ];
 
-    this.cristal.forEach((cristal) => {
-      cristal.objeto = this.physics.add.sprite(cristal.x, cristal.y, "crystal");
-      cristal.objeto.body.setAllowGravity(false);
-      cristal.objeto.play("crystal_spin");
+    this.cristaisContagem = {
+  verde: 0,
+  vermelho: 0
+};
 
-      // Aplica a cor tint sem perder a textura
-      cristal.objeto.setTint(cristal.cor);
+this.cristal.forEach((cristal) => {
+  cristal.objeto = this.physics.add.sprite(cristal.x, cristal.y, "crystal");
+  cristal.objeto.body.setAllowGravity(false);
+  cristal.objeto.play("crystal_spin");
 
-      this.physics.add.collider(cristal.objeto, this.layerChao);
-      this.physics.add.overlap(
-        this.personagemLocal,
-        cristal.objeto,
-        (personagem, cristal) => {
+  cristal.objeto.setTint(cristal.cor);
+
+  this.physics.add.collider(cristal.objeto, this.layerChao);
+  this.physics.add.overlap(
+    this.personagemLocal,
+    cristal.objeto,
+    (personagem, cristal) => {
+      cristal.disableBody(true, true);
+
+      this.tweens.add({
+        targets: cristal,
+        scale: 0,
+        alpha: 0,
+        duration: 300,
+        onComplete: () => {
           cristal.disableBody(true, true);
-          this.tweens.add({
-            targets: cristal,
-            scale: 0,
-            alpha: 0,
-            duration: 300,
-            onComplete: () => {
-              cristal.disableBody(true, true);
-            },
-          });
-          this.sound.play("crystalsound");
-          this.pontuacao += 1;
-          console.log("[CRISTAL] Cristal coletado. Pontuação atual:", this.pontuacao);
-          if (this.game.dadosJogo && this.game.dadosJogo.readyState === "open") {
-  this.game.dadosJogo.send(
-    JSON.stringify({
-      type: "pontuacao",
-      pontuacao: this.pontuacao,
-      cristal: this.cristal.map(c => ({ visivel: c.objeto.visible }))
-    })
-  );
-}
-
-          const rainbowColors = [
-            0xff0000, // vermelho
-            0xff7f00, // laranja
-            0xffff00, // amarelo
-            0x00ff00, // verde
-            0x0000ff, // azul
-            0x4b0082, // anil
-            0x8f00ff, // violeta
-          ];
-
-          let colorIndex = 0;
-
-          // Intervalo que troca as cores
-          const colorEvent = this.time.addEvent({
-            delay: 50,
-            loop: true,
-            callback: () => {
-              this.personagemLocal.setTint(rainbowColors[colorIndex]);
-              colorIndex = (colorIndex + 1) % rainbowColors.length;
-            },
-          });
-
-          // Depois de 700ms, para o efeito e limpa a cor
-          this.time.delayedCall(700, () => {
-            colorEvent.remove(false); // para o evento de troca
-            this.personagemLocal.clearTint(); // remove a cor
-          });
         },
-        null,
-        this
-      );
-    });
+      });
+
+      this.sound.play("crystalsound");
+      this.pontuacao += 1;
+
+      // Verifica a cor do cristal coletado
+      const tint = cristal.tintTopLeft;
+      if (tint === 0x00ff00) {
+        this.cristaisContagem.verde += 1;
+        console.log("[CRISTAL] Verde coletado:", this.cristaisContagem.verde);
+      } else if (tint === 0xff6666) {
+        this.cristaisContagem.vermelho += 1;
+        console.log("[CRISTAL] Vermelho coletado:", this.cristaisContagem.vermelho);
+      }
+
+      console.log("[CRISTAL] Total:", this.pontuacao);
+
+      if (this.game.dadosJogo && this.game.dadosJogo.readyState === "open") {
+        this.game.dadosJogo.send(
+          JSON.stringify({
+            type: "pontuacao",
+            pontuacao: this.pontuacao,
+            verdes: this.cristaisContagem.verde,
+            vermelhos: this.cristaisContagem.vermelho,
+            cristal: this.cristal.map(c => ({ visivel: c.objeto.visible }))
+          })
+        );
+      }
+
+      // Efeito arco-íris
+      const rainbowColors = [0xff0000, 0xff7f00, 0xffff00, 0x00ff00, 0x0000ff, 0x4b0082, 0x8f00ff];
+      let colorIndex = 0;
+
+      const colorEvent = this.time.addEvent({
+        delay: 50,
+        loop: true,
+        callback: () => {
+          this.personagemLocal.setTint(rainbowColors[colorIndex]);
+          colorIndex = (colorIndex + 1) % rainbowColors.length;
+        },
+      });
+
+      this.time.delayedCall(700, () => {
+        colorEvent.remove(false);
+        this.personagemLocal.clearTint();
+      });
+    },
+    null,
+    this
+  );
+});
+
     this.checarUI = () => {
       const elementosUI = [
         { nome: "Joystick", objeto: this.joystick.base },
@@ -1883,13 +1914,33 @@ if (dados.cristal) {
         });
   
         // Ir para cena final
-       this.time.delayedCall(9000, () => {
-         console.log("[FINALIZAÇÃO] Enviando para final-acabado com pontuação:", this.pontuacao);
+  this.time.delayedCall(9000, () => {
+  const totalVerdes = this.cristaisContagem.verde || 0;
+  const totalVermelhos = this.cristaisContagem.vermelho || 0;
+
   if (this.personagemLocal && this.personagemLocal.body) {
-    this.personagemLocal.body.enable = false;  // desativa o corpo
+    this.personagemLocal.body.enable = false;
   }
-  this.scene.start("final-acabado", { pontuacao: this.pontuacao });
+
+  // → Enviar para o outro jogador que acabou
+  if (this.game.dadosJogo?.readyState === "open") {
+    this.game.dadosJogo.send(JSON.stringify({ type: "finalizou" }));
+  }
+
+  if (totalVerdes === 11 && totalVermelhos === 7) {
+    console.log("[FINALIZAÇÃO] Pegou todos! Enviando para 'detonou'");
+    this.scene.start("detonou");
+  } else {
+    console.log("[FINALIZAÇÃO] Enviando para 'final-acabado'");
+    this.scene.start("final-acabado", {
+      pontuacao: this.pontuacao,
+      verdes: totalVerdes,
+      vermelhos: totalVermelhos,
+    });
+  }
 });
+
+
 
       }
     });

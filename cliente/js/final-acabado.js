@@ -25,24 +25,38 @@ export default class finalacabado extends Phaser.Scene {
       return;
     }
 
-    // Fundo
-    this.add.image(0, 0, 'parabens').setOrigin(0).setDepth(0)
-    // Pega pontuação do jogador
-    const pontuacao = data.pontuacao || 0;
+    this.add.image(0, 0, 'parabens').setOrigin(0).setDepth(0);
 
-    // Mostra quantos cristais foram coletados
+    const pontuacao = data.pontuacao || 0;
+    const verdes = data.verdes || 0;
+    const vermelhos = data.vermelhos || 0;
+
+    // Texto total
     this.add.text(
-      300,
-      280,
-      `${pontuacao}`,
+      320, 280,
+      `${verdes} / 11`,
       {
         fontFamily: 'game-over',
-        fontSize: '30px',
-        color: '#ffffff',
+        fontSize: '28px',
+        color: '#00ff00',
         stroke: '#000000',
         strokeThickness: 4,
       }
     ).setOrigin(0.5);
+
+    // Texto verde
+    this.add.text(
+      540, 280,
+      `${vermelhos} / 7`,
+      {
+        fontFamily: 'game-over',
+        fontSize: '28px',
+        color: '#ff0000',
+        stroke: '#000000',
+        strokeThickness: 4,
+      }
+    ).setOrigin(0.5);
+
   }
 
   update() {}
