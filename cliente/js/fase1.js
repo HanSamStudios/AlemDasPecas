@@ -1169,9 +1169,7 @@ this.cristal.forEach((cristal, index) => {
     verdes: this.cristaisContagem.verde,
     vermelhos: this.cristaisContagem.vermelho
   };
-      if (this.game.dadosJogo && this.game.dadosJogo.readyState === "open") {
-        this.game.dadosJogo.send(JSON.stringify({ type: "finalizou" }));
-      }
+
 
       this.finalizarJogoLocal();
     } else {
@@ -2094,6 +2092,7 @@ finalizarJogoRemoto(pontuacao, verdes, vermelhos) {
       });
 
       this.time.delayedCall(7000, () => {
+        console.log(`[REMOTO] Verificando cristais - verdes: ${verdes}, vermelhos: ${vermelhos}`);
         if (verdes === 11 && vermelhos === 7) {
             console.log("[REMOTO] Trocando para 'detonou'");
           this.scene.start("detonou");
@@ -2101,9 +2100,9 @@ finalizarJogoRemoto(pontuacao, verdes, vermelhos) {
             console.log("[REMOTO] Trocando para 'final-acabado'");
           this.scene.start("final-acabado", {
             
-             pontuacao,
-      verdes,
-      vermelhos
+       pontuacao: this.pontuacao,
+            verdes: this.cristaisContagem.verde,
+            vermelhos: this.cristaisContagem.vermelho,
           });
         }
       });
