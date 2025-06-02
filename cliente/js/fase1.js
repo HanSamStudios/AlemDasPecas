@@ -41,11 +41,11 @@ export default class fase1 extends Phaser.Scene {
     this.load.image("repeat", "assets/repeat.png");
     this.load.image("vaso", "assets/mapa/vaso.png");
     this.load.image("espinhos", "assets/mapa/espinhos.png");
-     this.load.spritesheet("foxmalmorte", "assets/foxmalmorte.png", {
+    this.load.spritesheet("foxmalmorte", "assets/foxmalmorte.png", {
       frameWidth: 64,
       frameHeight: 64,
     });
-      this.load.spritesheet("flag", "assets/flag.png", {
+    this.load.spritesheet("flag", "assets/flag.png", {
       frameWidth: 64,
       frameHeight: 64,
     });
@@ -57,7 +57,7 @@ export default class fase1 extends Phaser.Scene {
       frameWidth: 64,
       frameHeight: 64,
     });
-     this.load.spritesheet("passarinho", "assets/passarinho.png", {
+    this.load.spritesheet("passarinho", "assets/passarinho.png", {
       frameWidth: 64,
       frameHeight: 64,
     });
@@ -105,7 +105,6 @@ export default class fase1 extends Phaser.Scene {
     });
     this.musica.play();
 
-    
     this.somMorte = this.sound.add("morte", {
       volume: 3,
     });
@@ -116,9 +115,19 @@ export default class fase1 extends Phaser.Scene {
     this.tilesetCasa = this.tilemapMapa.addTilesetImage("casa");
     this.tilesetTp = this.tilemapMapa.addTilesetImage("tp");
     this.tilesetChao = this.tilemapMapa.addTilesetImage("chao", null, 64, 64);
-     this.tilesetFantasm = this.tilemapMapa.addTilesetImage("fantasm", null, 64, 64);
+    this.tilesetFantasm = this.tilemapMapa.addTilesetImage(
+      "fantasm",
+      null,
+      64,
+      64
+    );
     this.tilesetVaso = this.tilemapMapa.addTilesetImage("vaso", null, 64, 64);
-    this.tilesetPlacaa = this.tilemapMapa.addTilesetImage("placaa", null, 64, 64);
+    this.tilesetPlacaa = this.tilemapMapa.addTilesetImage(
+      "placaa",
+      null,
+      64,
+      64
+    );
     this.tilesetEspinhos = this.tilemapMapa.addTilesetImage("espinhos");
     this.tilesetFlores = this.tilemapMapa.addTilesetImage(
       "flores",
@@ -142,17 +151,21 @@ export default class fase1 extends Phaser.Scene {
       .setOrigin(0)
       .setScrollFactor(0);
     this.cavernaFundo.setAlpha(0);
-  
-     this.cemiterio = this.add.tileSprite(0, 0, 800, 450, "cemiterio");
+
+    this.cemiterio = this.add.tileSprite(0, 0, 800, 450, "cemiterio");
     this.cemiterio.setOrigin(0, 0);
     this.cemiterio.setScrollFactor(0);
     this.cemiterio.setAlpha(0);
-    this.cemiterio.setDepth(-10)
+    this.cemiterio.setDepth(-10);
 
     this.fundoAtual = "back";
 
     this.layerChao = this.tilemapMapa
-      .createLayer("chao", [this.tilesetChao, this.tilesetFantasm, this.tilesetTp])
+      .createLayer("chao", [
+        this.tilesetChao,
+        this.tilesetFantasm,
+        this.tilesetTp,
+      ])
       .setDepth(10);
     this.layerEspinhos = this.tilemapMapa
       .createLayer("espinhos", [this.tilesetEspinhos])
@@ -166,9 +179,7 @@ export default class fase1 extends Phaser.Scene {
         .setScale(1.5);
     });
     this.layersetas = this.tilemapMapa
-      .createLayer("setas", [
-        this.tilesetPlacaa,
-      ])
+      .createLayer("setas", [this.tilesetPlacaa])
       .setDepth(10);
 
     const spawnPoint = this.tilemapMapa.findObject(
@@ -295,50 +306,59 @@ export default class fase1 extends Phaser.Scene {
 
     this.game.dadosJogo.onmessage = (event) => {
       const dados = JSON.parse(event.data);
+
+      if (dados.type === "finalizou" && !this.jogoFinalizado) {
+        console.log("→ Recebido sinal de finalização do outro jogador");
+        this.jogoFinalizado = true;
+        this.finalizarJogoLocal();
+      }
+
       if (dados.personagem) {
         this.personagemRemoto.x = dados.personagem.x;
         this.personagemRemoto.y = dados.personagem.y;
         this.personagemRemoto.setFrame(dados.personagem.frame);
       }
+
       if (dados.vidas !== undefined) {
         this.vidas = dados.vidas;
         this.atualizarCoracoes();
-    
-        // Se a vida chegou a zero pelo dado recebido, finalize localmente
+
         if (this.vidas <= 0) {
-          this.scene.start("final-perdeu")
-          // Aqui desative controles, etc, se precisar
+          this.scene.start("final-perdeu");
         }
       }
+
       if (dados.gameOver) {
-        this.scene.start("final-perdeu")
+        this.scene.start("final-perdeu");
       }
-    
 
       if (dados.cristal) {
         this.cristal.forEach((cristal, i) => {
           if (dados.cristal[i].visivel) {
-            // Reativa o cristal se visível
             cristal.objeto.enableBody(false, cristal.x, cristal.y, true, true);
             cristal.objeto.setAlpha(1);
             cristal.objeto.setScale(1);
           } else {
-            // Desativa o cristal se não visível
             cristal.objeto.disableBody(true, true);
           }
         });
       }
-    if (dados.passarinho) {
-      this.passarinho.x = dados.passarinho.x;
-      this.passarinho.y = dados.passarinho.y;
-      this.passarinho.setFrame(dados.passarinho.frame);
-      this.passarinho.setFlipX(dados.passarinho.flipX);
 
-  if (dados.passarinho.anim && this.passarinho.anims?.currentAnim?.key !== dados.passarinho.anim) {
-    this.passarinho.play(dados.passarinho.anim);
-  }
-}
+      if (dados.passarinho) {
+        this.passarinho.x = dados.passarinho.x;
+        this.passarinho.y = dados.passarinho.y;
+        this.passarinho.setFrame(dados.passarinho.frame);
+        this.passarinho.setFlipX(dados.passarinho.flipX);
+
+        if (
+          dados.passarinho.anim &&
+          this.passarinho.anims?.currentAnim?.key !== dados.passarinho.anim
+        ) {
+          this.passarinho.play(dados.passarinho.anim);
+        }
+      }
     };
+    
     // this.personagemLocal.setTint(0x800080);
     /*candidate && 
   this.personagemLocal = this.physics.add.sprite(spawnPoint.x, spawnPoint.y, 'fox-primeiro')
@@ -401,8 +421,8 @@ export default class fase1 extends Phaser.Scene {
       this.personagemLocal,
       this.espinhosCaindo,
       (player, espinho) => {
-        this.tratarDano()
-// sua função de "game over" ou respawn
+        this.tratarDano();
+        // sua função de "game over" ou respawn
 
         // Esconde e desativa física, sem destruir o objeto
         espinho.setVisible(false);
@@ -473,7 +493,6 @@ export default class fase1 extends Phaser.Scene {
       .setDepth(10)
       .setScrollFactor(0)
       .setInteractive();
-
 
     // Ajustando o tamanho da imagem para o botão de dash
     this.botaoDash.setDisplaySize(80, 80); // Ajuste o tamanho conforme necessário
@@ -589,49 +608,49 @@ export default class fase1 extends Phaser.Scene {
       repeat: -1,
     });
 
-  this.cristal = [
-    { x: -2233.33, y: 3746.67, cor: 0xFF6666 }, // vermelho 
-  { x: -501.15, y: 3898.24, cor: 0x00ff00 },  // verde
-  { x: 1377.64, y: 3507.33, cor: 0x00ff00 },  // azul
-    { x: 2457.33, y: 4080.00, cor: 0xFF6666 },  // azul
-  { x: 3214.0, y: 4137.64, cor: 0x00ff00 },   // amarelo
-  { x: 4456.42, y: 3604.3, cor: 0x00ff00 },   // rosa
-  { x: 6551.58, y: 4333.27, cor: 0x00ff00 },  // ciano
-  { x: 6992.00, y: 4540.00, cor: 0xFF6666  },  // ciano
-    { x: 8034.67, y: 4356.00, cor: 0xFF6666  },  // ciano
-  { x: 8482.00, y: 3664.67, cor: 0x00ff00 },  // branco (sem mudança)
-  { x: 10442.00, y: 3508.67, cor: 0x00ff00 }, // laranja
-  { x: 11978.00, y: 3395.33, cor: 0x00ff00 }, // roxo
-   { x: 13281.33, y: 4369.33, cor: 0xFF66660 }, // roxo
-  { x: 15312.00, y: 3181.33, cor: 0x00ff00 },  // verde
-   { x: 16725.33, y: 3490.67, cor: 0xFF66660 },  // verde
-  { x: 17170.67, y: 2542.67, cor: 0x00ff00 }, 
-  { x: 17460.00, y: 3218.67, cor: 0xFF66660 },  // branco (sem mudança)
-  { x: 18416.00, y: 2338.00, cor: 0x00ff00 },  // branco (sem mudança)
-];
+    this.cristal = [
+      { x: -2233.33, y: 3746.67, cor: 0xff6666 }, // vermelho
+      { x: -501.15, y: 3898.24, cor: 0x00ff00 }, // verde
+      { x: 1377.64, y: 3507.33, cor: 0x00ff00 }, // azul
+      { x: 2457.33, y: 4080.0, cor: 0xff6666 }, // azul
+      { x: 3214.0, y: 4137.64, cor: 0x00ff00 }, // amarelo
+      { x: 4456.42, y: 3604.3, cor: 0x00ff00 }, // rosa
+      { x: 6551.58, y: 4333.27, cor: 0x00ff00 }, // ciano
+      { x: 6992.0, y: 4540.0, cor: 0xff6666 }, // ciano
+      { x: 8034.67, y: 4356.0, cor: 0xff6666 }, // ciano
+      { x: 8482.0, y: 3664.67, cor: 0x00ff00 }, // branco (sem mudança)
+      { x: 10442.0, y: 3508.67, cor: 0x00ff00 }, // laranja
+      { x: 11978.0, y: 3395.33, cor: 0x00ff00 }, // roxo
+      { x: 13281.33, y: 4369.33, cor: 0xff66660 }, // roxo
+      { x: 15312.0, y: 3181.33, cor: 0x00ff00 }, // verde
+      { x: 16725.33, y: 3490.67, cor: 0xff66660 }, // verde
+      { x: 17170.67, y: 2542.67, cor: 0x00ff00 },
+      { x: 17460.0, y: 3218.67, cor: 0xff66660 }, // branco (sem mudança)
+      { x: 18416.0, y: 2338.0, cor: 0x00ff00 }, // branco (sem mudança)
+    ];
 
-this.cristal.forEach((cristal) => {
-  cristal.objeto = this.physics.add.sprite(cristal.x, cristal.y, "crystal");
-  cristal.objeto.body.setAllowGravity(false);
-  cristal.objeto.play("crystal_spin");
+    this.cristal.forEach((cristal) => {
+      cristal.objeto = this.physics.add.sprite(cristal.x, cristal.y, "crystal");
+      cristal.objeto.body.setAllowGravity(false);
+      cristal.objeto.play("crystal_spin");
 
-  // Aplica a cor tint sem perder a textura
-  cristal.objeto.setTint(cristal.cor);
+      // Aplica a cor tint sem perder a textura
+      cristal.objeto.setTint(cristal.cor);
 
-  this.physics.add.collider(cristal.objeto, this.layerChao);
-  this.physics.add.overlap(
-    this.personagemLocal,
-    cristal.objeto,
-    (personagem, cristal) => {
-      this.tweens.add({
-        targets: cristal,
-        scale: 0,
-        alpha: 0,
-        duration: 300,
-        onComplete: () => {
-          cristal.disableBody(true, true);
-        },
-      });
+      this.physics.add.collider(cristal.objeto, this.layerChao);
+      this.physics.add.overlap(
+        this.personagemLocal,
+        cristal.objeto,
+        (personagem, cristal) => {
+          this.tweens.add({
+            targets: cristal,
+            scale: 0,
+            alpha: 0,
+            duration: 300,
+            onComplete: () => {
+              cristal.disableBody(true, true);
+            },
+          });
           this.sound.play("crystalsound");
           this.pontuacao += 1;
           const rainbowColors = [
@@ -705,34 +724,34 @@ this.cristal.forEach((cristal) => {
     });
     this.passarinhos = this.physics.add.group();
 
-// 2. Cria passarinho 1
-const passarinho1 = this.passarinhos.create(8180, 3854, "passarinho");
-passarinho1.setDepth(10);
-passarinho1.play("passarinho");
-passarinho1.body.allowGravity = false;
-passarinho1.body.immovable = true;
-passarinho1.setVelocityX(100);
-passarinho1.minX = 8100;
-passarinho1.maxX = 8280;
-passarinho1.atingido = false;
+    // 2. Cria passarinho 1
+    const passarinho1 = this.passarinhos.create(8180, 3854, "passarinho");
+    passarinho1.setDepth(10);
+    passarinho1.play("passarinho");
+    passarinho1.body.allowGravity = false;
+    passarinho1.body.immovable = true;
+    passarinho1.setVelocityX(100);
+    passarinho1.minX = 8100;
+    passarinho1.maxX = 8280;
+    passarinho1.atingido = false;
 
-// 3. Cria passarinho 2
-const passarinho2 = this.passarinhos.create(8380, 3854, "passarinho");
-passarinho2.setDepth(10);
-passarinho2.play("passarinho");
-passarinho2.body.allowGravity = false;
-passarinho2.body.immovable = true;
-passarinho2.setVelocityX(-100);
-passarinho2.minX = 8400;
-passarinho2.maxX = 8800;
-passarinho2.atingido = false;
+    // 3. Cria passarinho 2
+    const passarinho2 = this.passarinhos.create(8380, 3854, "passarinho");
+    passarinho2.setDepth(10);
+    passarinho2.play("passarinho");
+    passarinho2.body.allowGravity = false;
+    passarinho2.body.immovable = true;
+    passarinho2.setVelocityX(-100);
+    passarinho2.minX = 8400;
+    passarinho2.maxX = 8800;
+    passarinho2.atingido = false;
 
     this.physics.add.overlap(this.personagemLocal, this.passarinho, () => {
-  this.canDash = true;
-  this.canAirDash = true;
-  });
-  this.passarinhos.minX = 8180.00;
-  this.passarinhos.maxX = 8352.00;
+      this.canDash = true;
+      this.canAirDash = true;
+    });
+    this.passarinhos.minX = 8180.0;
+    this.passarinhos.maxX = 8352.0;
     /*
     this.physics.add.overlap(
       this.personagemLocal,
@@ -742,109 +761,109 @@ passarinho2.atingido = false;
       this
     );
     */
-this.fullscreen = this.add.image(30, 30, "fullscreen")
-  .setInteractive()
-  .setDepth(50)
-  .setScale(0.01)
-  .setScrollFactor(0) // Corrigido: "setscrollFactor" → "setScrollFactor"
-  .on("pointerdown", () => {
-    if (this.scale.isFullscreen) {
-      this.scale.stopFullscreen(); // Corrigido: "this.cale" → "this.scale"
-    } else {
-      this.scale.startFullscreen();
-    }
-  });
+    this.fullscreen = this.add
+      .image(30, 30, "fullscreen")
+      .setInteractive()
+      .setDepth(50)
+      .setScale(0.01)
+      .setScrollFactor(0) // Corrigido: "setscrollFactor" → "setScrollFactor"
+      .on("pointerdown", () => {
+        if (this.scale.isFullscreen) {
+          this.scale.stopFullscreen(); // Corrigido: "this.cale" → "this.scale"
+        } else {
+          this.scale.startFullscreen();
+        }
+      });
 
-  this.plataforma = this.physics.add.sprite(11900.67, 3623.33, 'plataforma');
-this.plataforma.body.setSize(64, 56);
-this.plataforma.body.setOffset(0, 8); // 64 - 52 = 12, desloca a hitbox 12px para baixo
+    this.plataforma = this.physics.add.sprite(11900.67, 3623.33, "plataforma");
+    this.plataforma.body.setSize(64, 56);
+    this.plataforma.body.setOffset(0, 8); // 64 - 52 = 12, desloca a hitbox 12px para baixo
 
+    // Configurações básicas
+    this.plataforma.body.allowGravity = false; // plataforma não cai
+    this.plataforma.body.immovable = true; // plataforma não é empurrada
+    this.plataforma.setVelocityX(100); // começa se movendo pra direita
 
-// Configurações básicas
-this.plataforma.body.allowGravity = false; // plataforma não cai
-this.plataforma.body.immovable = true;     // plataforma não é empurrada
-this.plataforma.setVelocityX(100);         // começa se movendo pra direita
+    // Colisão entre personagem e plataforma
+    this.physics.add.collider(this.personagemLocal, this.plataforma);
 
-// Colisão entre personagem e plataforma
-this.physics.add.collider(this.personagemLocal, this.plataforma);
+    this.plataforma.setPosition(11750, this.plataforma.y);
+    this.plataforma.setVelocityX(0); // começa parada
+    this.plataformaAtiva = false;
+    this.plataformaDirecao = 1;
+    this.replayBuffer = [];
+    this.ghostDelay = 60; // atraso em frames
+    this.fantasmaAtivado = false;
+    this.personagemMorto = false;
 
-this.plataforma.setPosition(11750, this.plataforma.y);
-this.plataforma.setVelocityX(0); // começa parada
-this.plataformaAtiva = false;
-this.plataformaDirecao = 1;
-this.replayBuffer = [];
-this.ghostDelay = 60; // atraso em frames
-this.fantasmaAtivado = false;
-  this.personagemMorto = false;
+    this.ghost = this.physics.add
+      .sprite(0, 0, "foxmal")
+      .setSize(40, 50)
+      .setOffset(12, 14)
+      .setAlpha(0.5)
+      .setVisible(true)
+      .setDepth(100);
+    this.ghost.body.allowGravity = false;
 
-  this.ghost = this.physics.add.sprite(0, 0, "foxmal")
-    .setSize(40, 50)
-    .setOffset(12, 14)
-    .setAlpha(0.5)
-    .setVisible(true)
-    .setDepth(100);
-  this.ghost.body.allowGravity = false;
-
-  this.physics.add.overlap(this.ghost, this.personagemLocal, () => {
-    this.somMorte.play();
-    this.tratarDano();
-  });
-  this.entrouNoCemiterio = false;
-  this.ghostTrailGroup = this.add.group();
-
-
-   const teleportes = this.tilemapMapa.getObjectLayer("tp").objects;
-
-  teleportes.forEach((obj) => {
-    const teleporte = this.add.zone(obj.x, obj.y, obj.width, obj.height)
-      .setOrigin(0)
-      .setName(obj.name);
-
-    this.physics.world.enable(teleporte);
-    teleporte.body.setAllowGravity(false);
-    teleporte.body.moves = false;
-
-    this.physics.add.overlap(this.personagemLocal, teleporte, () => {
-      if (teleporte.name === "tp1") {
-        this.personagemLocal.setPosition(7509.33, 4204.00);
-      } else if (teleporte.name === "tp2") {
-        this.personagemLocal.setPosition(11598.67, 3565.33);
-      }
+    this.physics.add.overlap(this.ghost, this.personagemLocal, () => {
+      this.somMorte.play();
+      this.tratarDano();
     });
-  });
+    this.entrouNoCemiterio = false;
+    this.ghostTrailGroup = this.add.group();
 
-  this.jogoFinalizado = false;
-  this.horrorScheduled = false
-  this.fantasmaFinalizado = false;
-  this.flag = this.physics.add.sprite(19264.67, 2247.33, "flag");
-  this.flag.body.setAllowGravity(false);
-this.flag.body.setImmovable(true);
-  this.flag.anims.play("flag");
-  this.flag.setScale(2)
-}
+    const teleportes = this.tilemapMapa.getObjectLayer("tp").objects;
 
+    teleportes.forEach((obj) => {
+      const teleporte = this.add
+        .zone(obj.x, obj.y, obj.width, obj.height)
+        .setOrigin(0)
+        .setName(obj.name);
+
+      this.physics.world.enable(teleporte);
+      teleporte.body.setAllowGravity(false);
+      teleporte.body.moves = false;
+
+      this.physics.add.overlap(this.personagemLocal, teleporte, () => {
+        if (teleporte.name === "tp1") {
+          this.personagemLocal.setPosition(7509.33, 4204.0);
+        } else if (teleporte.name === "tp2") {
+          this.personagemLocal.setPosition(11598.67, 3565.33);
+        }
+      });
+    });
+
+    this.jogoFinalizado = false;
+    this.horrorScheduled = false;
+    this.fantasmaFinalizado = false;
+    this.flag = this.physics.add.sprite(19264.67, 2247.33, "flag");
+    this.flag.body.setAllowGravity(false);
+    this.flag.body.setImmovable(true);
+    this.flag.anims.play("flag");
+    this.flag.setScale(2);
+  }
 
   update () {
-const emCimaDaPlataforma =
-  this.personagemLocal.body.touching.down &&
-  this.plataforma.body.touching.up &&
-  this.personagemLocal.body.blocked.down;
+    const emCimaDaPlataforma =
+      this.personagemLocal.body.touching.down &&
+      this.plataforma.body.touching.up &&
+      this.personagemLocal.body.blocked.down;
 
-if (emCimaDaPlataforma && !this.plataformaAtiva) {
-  this.plataformaAtiva = true;
-  this.plataforma.setVelocityX(100); // começa indo pra direita
-  this.plataformaDirecao = 1;
-}
+    if (emCimaDaPlataforma && !this.plataformaAtiva) {
+      this.plataformaAtiva = true;
+      this.plataforma.setVelocityX(100); // começa indo pra direita
+      this.plataformaDirecao = 1;
+    }
 
-if (this.plataformaAtiva) {
-  if (this.plataforma.x >= 12800 && this.plataformaDirecao === 1) {
-    this.plataforma.setVelocityX(-100);
-    this.plataformaDirecao = -1;
-  } else if (this.plataforma.x <= 11750 && this.plataformaDirecao === -1) {
-    this.plataforma.setVelocityX(0);
-    this.plataformaAtiva = false; // desativa, esperando novo toque
-  }
-}
+    if (this.plataformaAtiva) {
+      if (this.plataforma.x >= 12800 && this.plataformaDirecao === 1) {
+        this.plataforma.setVelocityX(-100);
+        this.plataformaDirecao = -1;
+      } else if (this.plataforma.x <= 11750 && this.plataformaDirecao === -1) {
+        this.plataforma.setVelocityX(0);
+        this.plataformaAtiva = false; // desativa, esperando novo toque
+      }
+    }
     this.back.tilePositionX = this.cameras.main.scrollX * 0.3;
     this.cavernaFundo.tilePositionX = this.cameras.main.scrollX * 0.3;
     this.cemiterio.tilePositionX = this.cameras.main.scrollX * 0.3;
@@ -904,13 +923,21 @@ if (this.plataformaAtiva) {
       tileRight &&
       tileRight.collides;
 
-    const encostadoPlataformaEsquerda = this.personagemLocal.body.touching.left && this.plataforma.body.touching.right;
-    const encostadoPlataformaDireita = this.personagemLocal.body.touching.right && this.plataforma.body.touching.left;
-    const encostadoPlataforma = encostadoPlataformaEsquerda || encostadoPlataformaDireita;
+    const encostadoPlataformaEsquerda =
+      this.personagemLocal.body.touching.left &&
+      this.plataforma.body.touching.right;
+    const encostadoPlataformaDireita =
+      this.personagemLocal.body.touching.right &&
+      this.plataforma.body.touching.left;
+    const encostadoPlataforma =
+      encostadoPlataformaEsquerda || encostadoPlataformaDireita;
 
     if (!this.personagemLocal.body.blocked.down) {
-      if ((encostadoEsquerda || encostadoDireita || encostadoPlataforma) && !this.isDashing &&
-    this.personagemLocal.body.velocity.y > -100)  {
+      if (
+        (encostadoEsquerda || encostadoDireita || encostadoPlataforma) &&
+        !this.isDashing &&
+        this.personagemLocal.body.velocity.y > -100
+      ) {
         const ladoAtual = encostadoEsquerda ? "left" : "right";
 
         if (this.ultimaParedeGrudada !== ladoAtual) {
@@ -1027,329 +1054,256 @@ if (this.plataformaAtiva) {
         duration: 1000,
         ease: "Linear",
       });
-
-      
     }
-  
+
     // Verifica se o personagem passou da coordenada x:14012.12 e troca para "cemiterio"
-// Primeiro verifica se passou do limite máximo pra resetar o fundo normal
-if (this.personagemLocal.x > 19133 && !this.jogoFinalizado) {
-  this.jogoFinalizado = true;
+    // Primeiro verifica se passou do limite máximo pra resetar o fundo normal
+    if (this.personagemLocal.x > 19133 && !this.jogoFinalizado) {
+      this.jogoFinalizado = true;
 
-   if (this.fugaText) {
-    this.fugaText.destroy();
-    this.fugaText = null;
-  }
-  if (this.entrouNoCemiterio) {
-    this.entrouNoCemiterio = false;
-    this.fundoAtual = "back";
-    this.musica.play();
+      if (this.game.dadosJogo && this.game.dadosJogo.readyState === "open") {
+        this.game.dadosJogo.send(JSON.stringify({ type: "finalizou" }));
+      }
 
-    this.tweens.add({
-      targets: this.cemiterio,
-      alpha: 0,
-      duration: 1000,
-      ease: "Linear",
-      onComplete: () => {
+      this.finalizarJogoLocal();
+    } else {
+      // Se não passou do limite máximo, mantém a lógica normal do cemitério
+      const dentroDoCemiterio = this.personagemLocal.x > 14012.12;
 
-            this.sound.stopByKey("horror");
-  this.cemiterio.setVisible(false);
-  console.log("→ Cemitério escondido por passar do limite X");
+      // Evita reentrada no cemitério se o jogo já foi finalizado
+      if (
+        dentroDoCemiterio &&
+        !this.entrouNoCemiterio &&
+        !this.jogoFinalizado
+      ) {
+        this.entrouNoCemiterio = true;
 
-  const obrigadoText = this.add.text(
-    this.cameras.main.centerX,
-    80,
-    "Obrigado por jogar",
-    {
-      fontFamily: "game-over",
-      fontSize: "35px",
-      color: "#FFFFFF",
-      fontStyle: "bold",
-      stroke: "#000000",
-      strokeThickness: 4
+        console.log("→ Entrando no cemitério");
+        this.fundoAtual = "cemiterio";
+
+        this.musica.stop();
+        this.sound.play("fantasma", { loop: false });
+        if (!this.horrorScheduled) {
+          this.horrorScheduled = true;
+          this.time.delayedCall(4000, () => {
+            console.log("Tocando horror");
+            this.sound.play("horror", { volume: 10, loop: true });
+          });
+        }
+
+        // Mostrar texto "FUGA" imediatamente
+        this.time.delayedCall(1000, () => {
+          const fugaText = this.add
+            .text(
+              this.cameras.main.centerX,
+              this.cameras.main.centerY,
+              "FUJA",
+              {
+                fontFamily: "game-over",
+                fontSize: "180px",
+                color: "#8B0000",
+                fontStyle: "bold",
+              }
+            )
+            .setDepth(2000)
+            .setOrigin(0.5)
+            .setScrollFactor(0);
+
+          this.tweens.add({
+            targets: fugaText,
+            alpha: 0,
+            duration: 50,
+            yoyo: true,
+            repeat: 3,
+            onComplete: () => {
+              fugaText.destroy();
+            },
+          });
+        });
+
+        this.cemiterio.setVisible(true);
+
+        this.tweens.add({
+          targets: this.back,
+          alpha: 0,
+          duration: 1000,
+          ease: "Linear",
+        });
+
+        this.tweens.add({
+          targets: this.cemiterio,
+          alpha: 1,
+          duration: 1000,
+          ease: "Linear",
+        });
+      } else if (!dentroDoCemiterio && this.entrouNoCemiterio) {
+        this.entrouNoCemiterio = false; // Reset para permitir tocar de novo se voltar
+
+        console.log("→ Saindo do cemitério, escondendo fundo");
+        this.fundoAtual = "back";
+        this.musica.play();
+        this.sound.stopByKey("horror");
+        this.horrorScheduled = false;
+        this.tweens.add({
+          targets: this.cemiterio,
+          alpha: 0,
+          duration: 1000,
+          ease: "Linear",
+          onComplete: () => {
+            this.cemiterio.setVisible(false);
+            console.log("→ Cemitério escondido");
+          },
+        });
+      }
+
+      const dentroZona = Phaser.Geom.Intersects.RectangleToRectangle(
+        this.personagemLocal.getBounds(),
+        this.zonaFundo.getBounds()
+      );
+
+      if (dentroZona && this.fundoAtual !== "fundo2") {
+        this.fundoAtual = "fundo2";
+        this.tweens.add({
+          targets: this.back,
+          alpha: 0,
+          duration: 1000,
+          ease: "Linear",
+        });
+        this.tweens.add({
+          targets: this.fundo2,
+          alpha: 1,
+          duration: 1000,
+          ease: "Linear",
+        });
+      }
+
+      if (!dentroZona && this.fundoAtual !== "back") {
+        this.fundoAtual = "back";
+        this.tweens.add({
+          targets: this.back,
+          alpha: 1,
+          duration: 1000,
+          ease: "Linear",
+        });
+        this.tweens.add({
+          targets: this.fundo2,
+          alpha: 0,
+          duration: 1000,
+          ease: "Linear",
+        });
+      }
     }
-  )
-  .setDepth(3000)
-  .setOrigin(0.5)
-  .setScrollFactor(0)
-  .setAlpha(0); // Começa invisível
-
-  // Tween para fazer fade in do texto
-  this.tweens.add({
-    targets: obrigadoText,
-    alpha: 1,
-    duration: 1500, // duração do fade in em ms
-    ease: "Linear",
-    delay: 500
-  });
-  const princesaText = this.add.text(
-  this.cameras.main.centerX,
-  130,  // 50 pixels abaixo do primeiro texto
-  "mas a princesa esta em outro castelo",
-  {
-    fontFamily: "game-over",
-    fontSize: "15px",
-    color: "#FFA500",
-    fontStyle: "bold",
-    stroke: "#000000",
-    strokeThickness: 4
-  }
-)
-.setDepth(3000)
-.setOrigin(0.5)
-.setScrollFactor(0)
-.setAlpha(0); // Começa invisível também
-
-// Tween para fazer fade in do texto da princesa, começando com pequeno delay para dar efeito
-this.tweens.add({
-  targets: princesaText,
-  alpha: 1,
-  duration: 1500,
-  ease: "Linear",
-  delay: 2000 // começa o fade in meio segundo depois do primeiro
-});
-this.time.delayedCall(9000, () => {
-  this.scene.start("final-acabado");
-});
-}
-
-
-      
-    });
-  }
-} else {
-  // Se não passou do limite máximo, mantém a lógica normal do cemitério
-const dentroDoCemiterio = this.personagemLocal.x > 14012.12;
-
-// Evita reentrada no cemitério se o jogo já foi finalizado
-if (dentroDoCemiterio && !this.entrouNoCemiterio && !this.jogoFinalizado) {
-    this.entrouNoCemiterio = true;
-
-    console.log("→ Entrando no cemitério");
-    this.fundoAtual = "cemiterio";
-
-    this.musica.stop();
-    this.sound.play("fantasma", { loop: false });
-     if (!this.horrorScheduled) {
-    this.horrorScheduled = true;
-    this.time.delayedCall(4000, () => {
-      console.log("Tocando horror");
-      this.sound.play("horror", { volume: 10, loop: true });
-    })
-  }
-
-    // Mostrar texto "FUGA" imediatamente
-    this.time.delayedCall(1000, () => {
-      const fugaText = this.add.text(
-        this.cameras.main.centerX,
-        this.cameras.main.centerY,
-        "FUJA",
-        {
-          fontFamily: "game-over",
-          fontSize: "180px",
-          color: "#8B0000",
-          fontStyle: "bold",
+    // Se o personagem estiver morto, desativa o fantasma e sai do update do fantasma
+    if (this.personagemMorto) {
+      if (this.fantasmaAtivado) {
+        this.fantasmaAtivado = false;
+        if (this.ghost) {
+          this.ghost.setVisible(false);
+          this.ghost.body.enable = false; // Desativa colisão corretamente
         }
-      )
-        .setDepth(2000)
-        .setOrigin(0.5)
-        .setScrollFactor(0);
+        this.replayBuffer = [];
+      }
+      return;
+    }
 
-      this.tweens.add({
-        targets: fugaText,
-        alpha: 0,
-        duration: 50,
-        yoyo: true,
-        repeat: 3,
-        onComplete: () => {
-          fugaText.destroy();
-        }
+    // Ativa o fantasma apenas se passar da posição X E estiver vivo
+    if (!this.fantasmaAtivado && this.personagemLocal.x > 14012.12) {
+      this.fantasmaAtivado = true;
+      if (this.ghost) {
+        this.ghost.setVisible(true);
+        this.ghost.body.enable = true;
+      }
+      this.replayBuffer = [];
+    }
+
+    // Atualiza fantasma somente se ativado
+    if (this.fantasmaAtivado) {
+      // Grava posição, flip e animação do personagem no buffer
+      this.replayBuffer.push({
+        x: this.personagemLocal.x,
+        y: this.personagemLocal.y,
+        flipX: this.personagemLocal.flipX,
+        anim: this.personagemLocal.anims?.isPlaying
+          ? this.personagemLocal.anims.currentAnim
+            ? this.personagemLocal.anims.currentAnim.key
+            : null
+          : null,
       });
-    });
 
-    this.cemiterio.setVisible(true);
-
-    this.tweens.add({
-      targets: this.back,
-      alpha: 0,
-      duration: 1000,
-      ease: "Linear",
-    });
-
-    this.tweens.add({
-      targets: this.cemiterio,
-      alpha: 1,
-      duration: 1000,
-      ease: "Linear",
-    });
-  }
-  else if (!dentroDoCemiterio && this.entrouNoCemiterio) {
-    this.entrouNoCemiterio = false; // Reset para permitir tocar de novo se voltar
-
-    console.log("→ Saindo do cemitério, escondendo fundo");
-    this.fundoAtual = "back";
-    this.musica.play()
-    this.sound.stopByKey("horror");
-     this.horrorScheduled = false; 
-    this.tweens.add({
-      targets: this.cemiterio,
-      alpha: 0,
-      duration: 1000,
-      ease: "Linear",
-      onComplete: () => {
-        this.cemiterio.setVisible(false);
-        console.log("→ Cemitério escondido");
+      // Limita tamanho do buffer (300 frames)
+      if (this.replayBuffer.length > 300) {
+        this.replayBuffer.shift();
       }
-    });
-  }
 
+      // Atualiza posição do fantasma com atraso
+      if (this.ghost && this.replayBuffer.length > this.ghostDelay) {
+        const ghostData = this.replayBuffer[0];
 
+        this.ghost.setPosition(ghostData.x, ghostData.y);
+        this.ghost.flipX = ghostData.flipX;
 
-  const dentroZona = Phaser.Geom.Intersects.RectangleToRectangle(
-    this.personagemLocal.getBounds(),
-    this.zonaFundo.getBounds()
-  );
+        if (ghostData.anim) {
+          const ghostAnimKey = ghostData.anim + "-ghost";
+          if (this.ghost.anims.currentAnim?.key !== ghostAnimKey) {
+            this.ghost.anims.play(ghostAnimKey, true);
+          }
+        }
 
-  if (dentroZona && this.fundoAtual !== "fundo2") {
-    this.fundoAtual = "fundo2";
-    this.tweens.add({
-      targets: this.back,
-      alpha: 0,
-      duration: 1000,
-      ease: "Linear",
-    });
-    this.tweens.add({
-      targets: this.fundo2,
-      alpha: 1,
-      duration: 1000,
-      ease: "Linear",
-    });
-  }
+        this.replayBuffer.shift();
+      }
 
-  if (!dentroZona && this.fundoAtual !== "back") {
-    this.fundoAtual = "back";
-    this.tweens.add({
-      targets: this.back,
-      alpha: 1,
-      duration: 1000,
-      ease: "Linear",
-    });
-    this.tweens.add({
-      targets: this.fundo2,
-      alpha: 0,
-      duration: 1000,
-      ease: "Linear",
-    });
-  }
-}
-// Se o personagem estiver morto, desativa o fantasma e sai do update do fantasma
-if (this.personagemMorto) {
-  if (this.fantasmaAtivado) {
-    this.fantasmaAtivado = false;
-    if (this.ghost) {
-      this.ghost.setVisible(false);
-      this.ghost.body.enable = false; // Desativa colisão corretamente
-    }
-    this.replayBuffer = [];
-  }
-  return;
-}
+      // Verifica se o fantasma passou do limite X para destruir
+      if (this.ghost && this.ghost.x > 19133) {
+        const x = this.ghost.x;
+        const y = this.ghost.y;
 
-// Ativa o fantasma apenas se passar da posição X E estiver vivo
-if (!this.fantasmaAtivado && this.personagemLocal.x > 14012.12) {
-  this.fantasmaAtivado = true;
-  if (this.ghost) {
-    this.ghost.setVisible(true);
-    this.ghost.body.enable = true;
-  }
-  this.replayBuffer = [];
-}
+        this.ghost.destroy();
+        this.ghost = null;
+        this.fantasmaAtivado = false;
+        this.replayBuffer = [];
 
-// Atualiza fantasma somente se ativado
-if (this.fantasmaAtivado) {
-  // Grava posição, flip e animação do personagem no buffer
-  this.replayBuffer.push({
-    x: this.personagemLocal.x,
-    y: this.personagemLocal.y,
-    flipX: this.personagemLocal.flipX,
-    anim: this.personagemLocal.anims?.isPlaying
-      ? (this.personagemLocal.anims.currentAnim ? this.personagemLocal.anims.currentAnim.key : null)
-      : null
-  });
+        const morteSprite = this.add.sprite(x, y, "foxmal");
 
-  // Limita tamanho do buffer (300 frames)
-  if (this.replayBuffer.length > 300) {
-    this.replayBuffer.shift();
-  }
+        morteSprite.anims.play("foxmalmorte");
 
-  // Atualiza posição do fantasma com atraso
-  if (this.ghost && this.replayBuffer.length > this.ghostDelay) {
-    const ghostData = this.replayBuffer[0];
-
-    this.ghost.setPosition(ghostData.x, ghostData.y);
-    this.ghost.flipX = ghostData.flipX;
-
-    if (ghostData.anim) {
-      const ghostAnimKey = ghostData.anim + "-ghost";
-      if (this.ghost.anims.currentAnim?.key !== ghostAnimKey) {
-        this.ghost.anims.play(ghostAnimKey, true);
+        // Quando a animação acabar, destrói o sprite da morte
+        morteSprite.on("animationcomplete", () => {
+          morteSprite.destroy();
+        });
       }
     }
 
-    this.replayBuffer.shift();
-  }
+    // Cria trilha de fantasma se ativado
+    if (this.fantasmaAtivado && this.ghost) {
+      if (!this.lastTrailTime || this.time.now - this.lastTrailTime > 300) {
+        // intervalo 300ms
+        this.lastTrailTime = this.time.now;
 
-  // Verifica se o fantasma passou do limite X para destruir
-  if (this.ghost && this.ghost.x > 19133) {
-      const x = this.ghost.x;
-      const y = this.ghost.y;
+        const trailSprite = this.add
+          .sprite(this.ghost.x, this.ghost.y, "foxmal")
+          .setAlpha(0.5)
+          .setTint(0xff0000) // aplica tint vermelho
+          .setFlipX(this.ghost.flipX)
+          .setDepth(this.ghost.depth - 1); // fica atrás do fantasma
 
-    this.ghost.destroy();
-    this.ghost = null;
-    this.fantasmaAtivado = false;
-    this.replayBuffer = []; 
+        this.ghostTrailGroup.add(trailSprite);
 
-     const morteSprite = this.add.sprite(x, y, 'foxmal');
+        // Toca a animação que o fantasma está tocando
+        if (this.ghost.anims.currentAnim) {
+          trailSprite.anims.play(this.ghost.anims.currentAnim.key);
+        }
 
-  morteSprite.anims.play('foxmalmorte');
-
-  // Quando a animação acabar, destrói o sprite da morte
-  morteSprite.on('animationcomplete', () => {
-    morteSprite.destroy();
-  });
-  }
-}
-
-// Cria trilha de fantasma se ativado
-if (this.fantasmaAtivado && this.ghost) {
-  if (!this.lastTrailTime || this.time.now - this.lastTrailTime > 300) { // intervalo 300ms
-    this.lastTrailTime = this.time.now;
-
-    const trailSprite = this.add.sprite(this.ghost.x, this.ghost.y, "foxmal")
-      .setAlpha(0.5)
-      .setTint(0xff0000)  // aplica tint vermelho
-      .setFlipX(this.ghost.flipX)
-      .setDepth(this.ghost.depth - 1); // fica atrás do fantasma
-
-    this.ghostTrailGroup.add(trailSprite);
-
-    // Toca a animação que o fantasma está tocando
-    if (this.ghost.anims.currentAnim) {
-      trailSprite.anims.play(this.ghost.anims.currentAnim.key);
-    }
-
-    // Faz sumir em 500ms
-    this.tweens.add({
-      targets: trailSprite,
-      alpha: 0,
-      duration: 500,
-      onComplete: () => {
-        trailSprite.destroy();
+        // Faz sumir em 500ms
+        this.tweens.add({
+          targets: trailSprite,
+          alpha: 0,
+          duration: 500,
+          onComplete: () => {
+            trailSprite.destroy();
+          },
+        });
       }
-    });
-  }
-}
-
+    }
 
     try {
       if (this.game.dadosJogo.readyState === "open") {
@@ -1401,140 +1355,143 @@ if (this.fantasmaAtivado && this.ghost) {
         }
       }
     });
-   this.passarinhos.children.iterate(passarinho => {
-  if (!passarinho.atingido) {
-    if (passarinho.x <= passarinho.minX) {
-      passarinho.setVelocityX(100);
-      passarinho.setFlipX(true); // vira para a direita
-    } else if (passarinho.x >= passarinho.maxX) {
-      passarinho.setVelocityX(-100);
-      passarinho.setFlipX(false); // vira para a esquerda
+    this.passarinhos.children.iterate((passarinho) => {
+      if (!passarinho.atingido) {
+        if (passarinho.x <= passarinho.minX) {
+          passarinho.setVelocityX(100);
+          passarinho.setFlipX(true); // vira para a direita
+        } else if (passarinho.x >= passarinho.maxX) {
+          passarinho.setVelocityX(-100);
+          passarinho.setFlipX(false); // vira para a esquerda
+        }
+      }
+    });
+    if (this.eDonoDoPassarinho && this.game.dadosJogo?.readyState === "open") {
+      const dados = {
+        passarinho: {
+          x: this.passarinho.x,
+          y: this.passarinho.y,
+          frame: this.passarinho.anims?.currentFrame?.index || 0,
+          flipX: this.passarinho.flipX,
+          anim: this.passarinho.anims?.currentAnim?.key || null,
+        },
+      };
+      this.game.dadosJogo.send(JSON.stringify(dados));
     }
+
+    // Também aqui pode ir a lógica do "pulão":
+    this.physics.add.overlap(
+      this.personagemLocal,
+      this.passarinhos,
+      (personagem, passarinho) => {
+        if (!passarinho.atingido) {
+          personagem.setVelocityY(-425);
+          this.canDash = true;
+          this.canAirDash = true;
+          passarinho.atingido = true;
+
+          const direcao = passarinho.body.velocity.x > 0 ? 1 : -1;
+
+          passarinho.setVelocityX(0);
+          passarinho.play("passarinho-dano");
+
+          this.time.delayedCall(200, () => {
+            passarinho.play("passarinho");
+            passarinho.setVelocityX(100 * direcao);
+            passarinho.setFlipX(direcao < 0);
+            passarinho.atingido = false;
+          });
+        }
+      }
+    );
   }
-});
-  if (this.eDonoDoPassarinho && this.game.dadosJogo?.readyState === "open") {
-  const dados = {
-    passarinho: {
-      x: this.passarinho.x,
-      y: this.passarinho.y,
-      frame: this.passarinho.anims?.currentFrame?.index || 0,
-      flipX: this.passarinho.flipX,
-      anim: this.passarinho.anims?.currentAnim?.key || null
-    },
-  };
-  this.game.dadosJogo.send(JSON.stringify(dados));
-}
 
-  // Também aqui pode ir a lógica do "pulão":
-  this.physics.add.overlap(this.personagemLocal, this.passarinhos, (personagem, passarinho) => {
-  if (!passarinho.atingido) {
-    personagem.setVelocityY(-425);
-    this.canDash = true;
-    this.canAirDash = true;
-    passarinho.atingido = true;
+  tratarDano () {
+    if (this.personagemLocal.isInvulnerable) return;
+    this.levandoDano = true;
 
-    const direcao = passarinho.body.velocity.x > 0 ? 1 : -1;
+    // Diminuir vida ao tomar dano
+    if (this.vidas > 0) {
+      this.vidas--;
 
-    passarinho.setVelocityX(0);
-    passarinho.play("passarinho-dano");
+      // Esconder o coração perdido
+      if (this.coracoes[this.vidas]) {
+        this.coracoes[this.vidas].setVisible(false);
+      }
 
-    this.time.delayedCall(200, () => {
-      passarinho.play("passarinho");
-      passarinho.setVelocityX(100 * direcao);
-      passarinho.setFlipX(direcao < 0);
-      passarinho.atingido = false;
+      // Mostrar animação de dano no mesmo lugar do coração perdido
+      if (this.animacoesDano[this.vidas]) {
+        const animDano = this.animacoesDano[this.vidas];
+        animDano.setVisible(true);
+        animDano.anims.play("dano");
+        animDano.on(
+          "animationcomplete",
+          () => {
+            animDano.setVisible(false);
+          },
+          this
+        );
+      }
+
+      // **Aqui escondemos o fantasma e desativamos**
+      this.fantasmaAtivado = false;
+      if (this.ghost) {
+        this.ghost.setVisible(false), (this.ghost.body.enable = false);
+      }
+      this.replayBuffer = [];
+    }
+
+    // Se morreu totalmente
+    if (this.vidas <= 0) {
+      this.personagemMorto = true;
+
+      // Se quiser destruir o fantasma ao morrer totalmente:
+      if (this.ghost) {
+        this.ghost.destroy();
+        this.ghost = null;
+      }
+
+      this.replayBuffer = [];
+
+      this.scene.start("final-perdeu");
+      return;
+    }
+
+    this.atualizarVidas();
+
+    // Continua com o efeito de dano e invulnerabilidade
+    this.personagemLocal.isInvulnerable = true;
+    this.personagemLocal.setVelocity(0, 0);
+    this.personagemLocal.anims.play("personagem-dano", true);
+    this.personagemLocal.setTint(0xff7f7f);
+
+    const knockback = this.direcaoAtual === "direita" ? -150 : 150; // bate pra trás
+    this.personagemLocal.setVelocity(knockback, -200);
+
+    this.isDashing = true;
+    this.jumpPressed = false;
+
+    this.time.delayedCall(750, () => {
+      if (this.entrouNoCemiterio) {
+        this.personagemLocal.setPosition(13138.67, 3389.33);
+        this.personagemLocal.setVelocity(0, 0); // reseta movimento
+        this.personagemLocal.clearTint();
+      } else {
+        this.personagemLocal.clearTint();
+        this.personagemLocal.setPosition(this.spawnPoint.x, this.spawnPoint.y);
+      }
+
+      this.isDashing = false;
+      this.personagemLocal.isInvulnerable = false;
+
+      // Animação após o respawn
+      if (this.direcaoAtual === "direita") {
+        this.personagemLocal.anims.play("personagem-parado-direita", true);
+      } else {
+        this.personagemLocal.anims.play("personagem-parado-esquerda", true);
+      }
     });
   }
-  
-});
-
-  }
-
-  tratarDano() {
-  if (this.personagemLocal.isInvulnerable) return;
-  this.levandoDano = true;
-
-  // Diminuir vida ao tomar dano
-  if (this.vidas > 0) {
-    this.vidas--;
-
-    // Esconder o coração perdido
-    if (this.coracoes[this.vidas]) {
-      this.coracoes[this.vidas].setVisible(false);
-    }
-
-    // Mostrar animação de dano no mesmo lugar do coração perdido
-    if (this.animacoesDano[this.vidas]) {
-      const animDano = this.animacoesDano[this.vidas];
-      animDano.setVisible(true);
-      animDano.anims.play("dano");
-      animDano.on("animationcomplete", () => {
-        animDano.setVisible(false);
-      }, this);
-    }
-
-    // **Aqui escondemos o fantasma e desativamos**
-    this.fantasmaAtivado = false;
-    if (this.ghost) {
-      this.ghost.setVisible(false),
-      this.ghost.body.enable = false;
-    }
-    this.replayBuffer = [];
-  }
-
-  // Se morreu totalmente
-  if (this.vidas <= 0) {
-    this.personagemMorto = true;
-
-    // Se quiser destruir o fantasma ao morrer totalmente:
-    if (this.ghost) {
-      this.ghost.destroy();
-      this.ghost = null;
-    }
-
-    this.replayBuffer = [];
-
-    this.scene.start("final-perdeu");
-    return;
-  }
-
-  this.atualizarVidas();
-
-  
-  // Continua com o efeito de dano e invulnerabilidade
-  this.personagemLocal.isInvulnerable = true;
-  this.personagemLocal.setVelocity(0, 0);
-  this.personagemLocal.anims.play("personagem-dano", true);
-  this.personagemLocal.setTint(0xff7f7f);
-
-const knockback = this.direcaoAtual === "direita" ? -150 : 150; // bate pra trás
-this.personagemLocal.setVelocity(knockback, -200);
-
-this.isDashing = true;
-this.jumpPressed = false;
-
-this.time.delayedCall(750, () => {
-  if (this.entrouNoCemiterio) {
-    this.personagemLocal.setPosition(13138.67, 3389.33);
-    this.personagemLocal.setVelocity(0, 0); // reseta movimento
-     this.personagemLocal.clearTint();
-  } else {
-    this.personagemLocal.clearTint();
-    this.personagemLocal.setPosition(this.spawnPoint.x, this.spawnPoint.y);
-  }
-
-  this.isDashing = false;
-  this.personagemLocal.isInvulnerable = false;
-
-  // Animação após o respawn
-  if (this.direcaoAtual === "direita") {
-    this.personagemLocal.anims.play("personagem-parado-direita", true);
-  } else {
-    this.personagemLocal.anims.play("personagem-parado-esquerda", true);
-  }
-});
-  }
-
 
   createAnims () {
     this.anims.create({
@@ -1659,110 +1616,112 @@ this.time.delayedCall(750, () => {
       repeat: 0,
     });
     this.anims.create({
-  key: "passarinho",
-  frames: this.anims.generateFrameNumbers("passarinho", {
-    start: 0,
-    end: 8,
-  }),
-  frameRate: 15,
-  repeat: -1,
-});
-this.anims.create({
-  key: "passarinho-dano",
-  frames: this.anims.generateFrameNumbers("passarinho-dano", {
-    start: 0,
-    end: 4,
-  }),
-  frameRate: 2,
-  repeat: 0,
-});
+      key: "passarinho",
+      frames: this.anims.generateFrameNumbers("passarinho", {
+        start: 0,
+        end: 8,
+      }),
+      frameRate: 15,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "passarinho-dano",
+      frames: this.anims.generateFrameNumbers("passarinho-dano", {
+        start: 0,
+        end: 4,
+      }),
+      frameRate: 2,
+      repeat: 0,
+    });
 
-this.anims.create({
-  key: "flag",
-  frames: this.anims.generateFrameNumbers("flag", { start: 0, end: 4 }),
-  frameRate: 10,
-  repeat: -1
-});
-this.anims.create({
-  key: "foxmalmorte",
-  frames: this.anims.generateFrameNumbers("foxmalmorte", { start: 0, end: 4 }),
-  frameRate: 8,
-  repeat: 0
-});
+    this.anims.create({
+      key: "flag",
+      frames: this.anims.generateFrameNumbers("flag", { start: 0, end: 4 }),
+      frameRate: 10,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "foxmalmorte",
+      frames: this.anims.generateFrameNumbers("foxmalmorte", {
+        start: 0,
+        end: 4,
+      }),
+      frameRate: 8,
+      repeat: 0,
+    });
 
-//sprites da raposa fantasma
+    //sprites da raposa fantasma
 
-this.anims.create({
-  key: "personagem-andando-direita-ghost",
-  frames: this.anims.generateFrameNumbers("foxmal", { start: 3, end: 9 }),
-  frameRate: 10,
-  repeat: -1,
-});
-this.anims.create({
-  key: "personagem-andando-esquerda-ghost",
-  frames: this.anims.generateFrameNumbers("foxmal", { start: 39, end: 45 }),
-  frameRate: 10,
-  repeat: -1,
-});
-this.anims.create({
-  key: "personagem-parado-direita-ghost",
-  frames: this.anims.generateFrameNumbers("foxmal", { start: 1, end: 1 }),
-  frameRate: 1,
-});
-this.anims.create({
-  key: "personagem-parado-esquerda-ghost",
-  frames: this.anims.generateFrameNumbers("foxmal", { start: 36, end: 36 }),
-  frameRate: 1,
-});
-this.anims.create({
-  key: "personagem-pulando-direita-ghost",
-  frames: this.anims.generateFrameNumbers("foxmal", { start: 19, end: 19 }),
-  frameRate: 10,
-  repeat: -1,
-});
-this.anims.create({
-  key: "personagem-pulando-esquerda-ghost",
-  frames: this.anims.generateFrameNumbers("foxmal", { start: 55, end: 55 }),
-  frameRate: 10,
-  repeat: -1,
-});
-this.anims.create({
-  key: "personagem-caindo-direita-ghost",
-  frames: this.anims.generateFrameNumbers("foxmal", { start: 20, end: 20 }),
-  frameRate: 10,
-  repeat: -1,
-});
-this.anims.create({
-  key: "personagem-caindo-esquerda-ghost",
-  frames: this.anims.generateFrameNumbers("foxmal", { start: 56, end: 56 }),
-  frameRate: 10,
-  repeat: -1,
-});
-this.anims.create({
-  key: "personagem-wallgrab-direita-ghost",
-  frames: this.anims.generateFrameNumbers("foxmal", { start: 21, end: 21 }),
-  frameRate: 10,
-  repeat: -1,
-});
-this.anims.create({
-  key: "personagem-wallgrab-esquerda-ghost",
-  frames: this.anims.generateFrameNumbers("foxmal", { start: 57, end: 57 }),
-  frameRate: 10,
-  repeat: -1,
-});
-this.anims.create({
-  key: "personagem-dash-direita-ghost",
-  frames: this.anims.generateFrameNumbers("foxmal", { start: 30, end: 33 }),
-  frameRate: 20,
-  repeat: 0,
-});
-this.anims.create({
-  key: "personagem-dash-esquerda-ghost",
-  frames: this.anims.generateFrameNumbers("foxmal", { start: 66, end: 69 }),
-  frameRate: 20,
-  repeat: 0,
-});
-
+    this.anims.create({
+      key: "personagem-andando-direita-ghost",
+      frames: this.anims.generateFrameNumbers("foxmal", { start: 3, end: 9 }),
+      frameRate: 10,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "personagem-andando-esquerda-ghost",
+      frames: this.anims.generateFrameNumbers("foxmal", { start: 39, end: 45 }),
+      frameRate: 10,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "personagem-parado-direita-ghost",
+      frames: this.anims.generateFrameNumbers("foxmal", { start: 1, end: 1 }),
+      frameRate: 1,
+    });
+    this.anims.create({
+      key: "personagem-parado-esquerda-ghost",
+      frames: this.anims.generateFrameNumbers("foxmal", { start: 36, end: 36 }),
+      frameRate: 1,
+    });
+    this.anims.create({
+      key: "personagem-pulando-direita-ghost",
+      frames: this.anims.generateFrameNumbers("foxmal", { start: 19, end: 19 }),
+      frameRate: 10,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "personagem-pulando-esquerda-ghost",
+      frames: this.anims.generateFrameNumbers("foxmal", { start: 55, end: 55 }),
+      frameRate: 10,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "personagem-caindo-direita-ghost",
+      frames: this.anims.generateFrameNumbers("foxmal", { start: 20, end: 20 }),
+      frameRate: 10,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "personagem-caindo-esquerda-ghost",
+      frames: this.anims.generateFrameNumbers("foxmal", { start: 56, end: 56 }),
+      frameRate: 10,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "personagem-wallgrab-direita-ghost",
+      frames: this.anims.generateFrameNumbers("foxmal", { start: 21, end: 21 }),
+      frameRate: 10,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "personagem-wallgrab-esquerda-ghost",
+      frames: this.anims.generateFrameNumbers("foxmal", { start: 57, end: 57 }),
+      frameRate: 10,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "personagem-dash-direita-ghost",
+      frames: this.anims.generateFrameNumbers("foxmal", { start: 30, end: 33 }),
+      frameRate: 20,
+      repeat: 0,
+    });
+    this.anims.create({
+      key: "personagem-dash-esquerda-ghost",
+      frames: this.anims.generateFrameNumbers("foxmal", { start: 66, end: 69 }),
+      frameRate: 20,
+      repeat: 0,
+    });
   }
 
   resetarParaSpawn () {
@@ -1816,14 +1775,84 @@ this.anims.create({
   }
   atualizarVidas () {
     this.atualizarCoracoes();
-  
+
     if (this.game.dadosJogo && this.game.dadosJogo.readyState === "open") {
       // Enviar as vidas atuais e se o jogo acabou
-      this.game.dadosJogo.send(JSON.stringify({
-        vidas: this.vidas,
-        gameOver: this.vidas <= 0
-      }));
+      this.game.dadosJogo.send(
+        JSON.stringify({
+          vidas: this.vidas,
+          gameOver: this.vidas <= 0,
+        })
+      );
     }
   }
-}
-
+  finalizarJogoLocal () {
+    // Garante que a música volta ao normal
+    this.fundoAtual = "back";
+    this.sound.stopByKey("horror");
+    this.musica.play();
+  
+    // Esconde o cemitério
+    this.tweens.add({
+      targets: this.cemiterio,
+      alpha: 0,
+      duration: 1000,
+      ease: "Linear",
+      onComplete: () => {
+        this.cemiterio.setVisible(false);
+        console.log("→ Cemitério escondido");
+  
+        // Mensagem "obrigado"
+        const obrigadoText = this.add.text(
+          this.cameras.main.centerX,
+          80,
+          "Obrigado por jogar",
+          {
+            fontFamily: "game-over",
+            fontSize: "35px",
+            color: "#FFFFFF",
+            fontStyle: "bold",
+            stroke: "#000000",
+            strokeThickness: 4
+          }
+        ).setDepth(3000).setOrigin(0.5).setScrollFactor(0).setAlpha(0);
+  
+        this.tweens.add({
+          targets: obrigadoText,
+          alpha: 1,
+          duration: 1500,
+          ease: "Linear",
+          delay: 500
+        });
+  
+        // Mensagem da princesa
+        const princesaText = this.add.text(
+          this.cameras.main.centerX,
+          130,
+          "mas a princesa está em outro castelo",
+          {
+            fontFamily: "game-over",
+            fontSize: "15px",
+            color: "#FFA500",
+            fontStyle: "bold",
+            stroke: "#000000",
+            strokeThickness: 4
+          }
+        ).setDepth(3000).setOrigin(0.5).setScrollFactor(0).setAlpha(0);
+  
+        this.tweens.add({
+          targets: princesaText,
+          alpha: 1,
+          duration: 1500,
+          ease: "Linear",
+          delay: 2000
+        });
+  
+        // Ir para cena final
+        this.time.delayedCall(9000, () => {
+          this.scene.start("final-acabado");
+        });
+      }
+    });
+  }
+}  
