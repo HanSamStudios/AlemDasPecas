@@ -1,7 +1,7 @@
 export default class finalacabado extends Phaser.Scene {
 
   constructor () {
-    super('finalacabado')
+    super('final-acabado')
   }
 
   init () { }

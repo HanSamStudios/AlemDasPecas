@@ -41,6 +41,14 @@ export default class fase1 extends Phaser.Scene {
     this.load.image("repeat", "assets/repeat.png");
     this.load.image("vaso", "assets/mapa/vaso.png");
     this.load.image("espinhos", "assets/mapa/espinhos.png");
+     this.load.spritesheet("foxmalmorte", "assets/foxmalmorte.png", {
+      frameWidth: 64,
+      frameHeight: 64,
+    });
+      this.load.spritesheet("flag", "assets/flag.png", {
+      frameWidth: 64,
+      frameHeight: 64,
+    });
     this.load.spritesheet("crystal", "assets/greencrystal.png", {
       frameWidth: 64,
       frameHeight: 64,
@@ -599,6 +607,7 @@ export default class fase1 extends Phaser.Scene {
    { x: 16725.33, y: 3490.67, cor: 0xFF66660 },  // verde
   { x: 17170.67, y: 2542.67, cor: 0x00ff00 }, 
   { x: 17460.00, y: 3218.67, cor: 0xFF66660 },  // branco (sem mudança)
+  { x: 18416.00, y: 2338.00, cor: 0x00ff00 },  // branco (sem mudança)
 ];
 
 this.cristal.forEach((cristal) => {
@@ -804,6 +813,14 @@ this.fantasmaAtivado = false;
     });
   });
 
+  this.jogoFinalizado = false;
+  this.horrorScheduled = false
+  this.fantasmaFinalizado = false;
+  this.flag = this.physics.add.sprite(19264.67, 2247.33, "flag");
+  this.flag.body.setAllowGravity(false);
+this.flag.body.setImmovable(true);
+  this.flag.anims.play("flag");
+  this.flag.setScale(2)
 }
 
 
@@ -1015,84 +1032,176 @@ if (this.plataformaAtiva) {
     }
   
     // Verifica se o personagem passou da coordenada x:14012.12 e troca para "cemiterio"
-const dentroDoCemiterio = this.personagemLocal.x > 14012.12;
+// Primeiro verifica se passou do limite máximo pra resetar o fundo normal
+if (this.personagemLocal.x > 19133 && !this.jogoFinalizado) {
+  this.jogoFinalizado = true;
 
-if (dentroDoCemiterio && !this.entrouNoCemiterio) {
-  this.entrouNoCemiterio = true;
+   if (this.fugaText) {
+    this.fugaText.destroy();
+    this.fugaText = null;
+  }
+  if (this.entrouNoCemiterio) {
+    this.entrouNoCemiterio = false;
+    this.fundoAtual = "back";
+    this.musica.play();
 
-  console.log("→ Entrando no cemitério");
-  this.fundoAtual = "cemiterio";
+    this.tweens.add({
+      targets: this.cemiterio,
+      alpha: 0,
+      duration: 1000,
+      ease: "Linear",
+      onComplete: () => {
 
-  this.musica.stop();
-  this.sound.play("fantasma", { loop: false });
+            this.sound.stopByKey("horror");
+  this.cemiterio.setVisible(false);
+  console.log("→ Cemitério escondido por passar do limite X");
 
-  // Mostrar texto "FUGA" imediatamente
-  this.time.delayedCall(1000, () => {
-  const fugaText = this.add.text(
+  const obrigadoText = this.add.text(
     this.cameras.main.centerX,
-    this.cameras.main.centerY,
-    "FUJA",
+    80,
+    "Obrigado por jogar",
     {
       fontFamily: "game-over",
-      fontSize: "180px",
-      color: "#8B0000",
+      fontSize: "35px",
+      color: "#FFFFFF",
       fontStyle: "bold",
+      stroke: "#000000",
+      strokeThickness: 4
     }
   )
-  .setDepth(2000)
+  .setDepth(3000)
   .setOrigin(0.5)
-  .setScrollFactor(0);
+  .setScrollFactor(0)
+  .setAlpha(0); // Começa invisível
 
+  // Tween para fazer fade in do texto
   this.tweens.add({
-    targets: fugaText,
-    alpha: 0,
-    duration: 50,
-    yoyo: true,
-    repeat: 3,
-    onComplete: () => {
-      fugaText.destroy();
-    }
-  });
-  });
-
-  this.time.delayedCall(4000, () => {
-    console.log("Tocando horror");
-    this.sound.play("horror", { volume: 10 });
-  });
-
-  this.cemiterio.setVisible(true);
-
-  this.tweens.add({
-    targets: this.back,
-    alpha: 0,
-    duration: 1000,
-    ease: "Linear",
-  });
-
-  this.tweens.add({
-    targets: this.cemiterio,
+    targets: obrigadoText,
     alpha: 1,
-    duration: 1000,
+    duration: 1500, // duração do fade in em ms
     ease: "Linear",
+    delay: 500
   });
-}
-else if (!dentroDoCemiterio && this.entrouNoCemiterio) {
-  this.entrouNoCemiterio = false; // Reset para permitir tocar de novo se voltar
+  const princesaText = this.add.text(
+  this.cameras.main.centerX,
+  130,  // 50 pixels abaixo do primeiro texto
+  "mas a princesa esta em outro castelo",
+  {
+    fontFamily: "game-over",
+    fontSize: "15px",
+    color: "#FFA500",
+    fontStyle: "bold",
+    stroke: "#000000",
+    strokeThickness: 4
+  }
+)
+.setDepth(3000)
+.setOrigin(0.5)
+.setScrollFactor(0)
+.setAlpha(0); // Começa invisível também
 
-  console.log("→ Saindo do cemitério, escondendo fundo");
-  this.fundoAtual = "back";
-  this.musica.play()
-  this.sound.stopByKey("horror");
-  this.tweens.add({
-    targets: this.cemiterio,
-    alpha: 0,
-    duration: 1000,
-    ease: "Linear",
-    onComplete: () => {
-      this.cemiterio.setVisible(false);
-      console.log("→ Cemitério escondido");
-    }
-  });
+// Tween para fazer fade in do texto da princesa, começando com pequeno delay para dar efeito
+this.tweens.add({
+  targets: princesaText,
+  alpha: 1,
+  duration: 1500,
+  ease: "Linear",
+  delay: 2000 // começa o fade in meio segundo depois do primeiro
+});
+this.time.delayedCall(9000, () => {
+  this.scene.start("final-acabado");
+});
+}
+
+
+      
+    });
+  }
+} else {
+  // Se não passou do limite máximo, mantém a lógica normal do cemitério
+const dentroDoCemiterio = this.personagemLocal.x > 14012.12;
+
+// Evita reentrada no cemitério se o jogo já foi finalizado
+if (dentroDoCemiterio && !this.entrouNoCemiterio && !this.jogoFinalizado) {
+    this.entrouNoCemiterio = true;
+
+    console.log("→ Entrando no cemitério");
+    this.fundoAtual = "cemiterio";
+
+    this.musica.stop();
+    this.sound.play("fantasma", { loop: false });
+     if (!this.horrorScheduled) {
+    this.horrorScheduled = true;
+    this.time.delayedCall(4000, () => {
+      console.log("Tocando horror");
+      this.sound.play("horror", { volume: 10, loop: true });
+    })
+  }
+
+    // Mostrar texto "FUGA" imediatamente
+    this.time.delayedCall(1000, () => {
+      const fugaText = this.add.text(
+        this.cameras.main.centerX,
+        this.cameras.main.centerY,
+        "FUJA",
+        {
+          fontFamily: "game-over",
+          fontSize: "180px",
+          color: "#8B0000",
+          fontStyle: "bold",
+        }
+      )
+        .setDepth(2000)
+        .setOrigin(0.5)
+        .setScrollFactor(0);
+
+      this.tweens.add({
+        targets: fugaText,
+        alpha: 0,
+        duration: 50,
+        yoyo: true,
+        repeat: 3,
+        onComplete: () => {
+          fugaText.destroy();
+        }
+      });
+    });
+
+    this.cemiterio.setVisible(true);
+
+    this.tweens.add({
+      targets: this.back,
+      alpha: 0,
+      duration: 1000,
+      ease: "Linear",
+    });
+
+    this.tweens.add({
+      targets: this.cemiterio,
+      alpha: 1,
+      duration: 1000,
+      ease: "Linear",
+    });
+  }
+  else if (!dentroDoCemiterio && this.entrouNoCemiterio) {
+    this.entrouNoCemiterio = false; // Reset para permitir tocar de novo se voltar
+
+    console.log("→ Saindo do cemitério, escondendo fundo");
+    this.fundoAtual = "back";
+    this.musica.play()
+    this.sound.stopByKey("horror");
+     this.horrorScheduled = false; 
+    this.tweens.add({
+      targets: this.cemiterio,
+      alpha: 0,
+      duration: 1000,
+      ease: "Linear",
+      onComplete: () => {
+        this.cemiterio.setVisible(false);
+        console.log("→ Cemitério escondido");
+      }
+    });
+  }
 
 
 
@@ -1133,8 +1242,7 @@ else if (!dentroDoCemiterio && this.entrouNoCemiterio) {
     });
   }
 }
-
-    // Se o personagem estiver morto, desativa o fantasma e sai do update do fantasma
+// Se o personagem estiver morto, desativa o fantasma e sai do update do fantasma
 if (this.personagemMorto) {
   if (this.fantasmaAtivado) {
     this.fantasmaAtivado = false;
@@ -1150,8 +1258,10 @@ if (this.personagemMorto) {
 // Ativa o fantasma apenas se passar da posição X E estiver vivo
 if (!this.fantasmaAtivado && this.personagemLocal.x > 14012.12) {
   this.fantasmaAtivado = true;
-  this.ghost.setVisible(true),
-  this.ghost.body.enable = true;
+  if (this.ghost) {
+    this.ghost.setVisible(true);
+    this.ghost.body.enable = true;
+  }
   this.replayBuffer = [];
 }
 
@@ -1173,7 +1283,7 @@ if (this.fantasmaAtivado) {
   }
 
   // Atualiza posição do fantasma com atraso
-  if (this.replayBuffer.length > this.ghostDelay) {
+  if (this.ghost && this.replayBuffer.length > this.ghostDelay) {
     const ghostData = this.replayBuffer[0];
 
     this.ghost.setPosition(ghostData.x, ghostData.y);
@@ -1188,9 +1298,31 @@ if (this.fantasmaAtivado) {
 
     this.replayBuffer.shift();
   }
+
+  // Verifica se o fantasma passou do limite X para destruir
+  if (this.ghost && this.ghost.x > 19133) {
+      const x = this.ghost.x;
+      const y = this.ghost.y;
+
+    this.ghost.destroy();
+    this.ghost = null;
+    this.fantasmaAtivado = false;
+    this.replayBuffer = []; 
+
+     const morteSprite = this.add.sprite(x, y, 'foxmal');
+
+  morteSprite.anims.play('foxmalmorte');
+
+  // Quando a animação acabar, destrói o sprite da morte
+  morteSprite.on('animationcomplete', () => {
+    morteSprite.destroy();
+  });
+  }
 }
+
+// Cria trilha de fantasma se ativado
 if (this.fantasmaAtivado && this.ghost) {
-  if (!this.lastTrailTime || this.time.now - this.lastTrailTime > 300) { // intervalo 50ms
+  if (!this.lastTrailTime || this.time.now - this.lastTrailTime > 300) { // intervalo 300ms
     this.lastTrailTime = this.time.now;
 
     const trailSprite = this.add.sprite(this.ghost.x, this.ghost.y, "foxmal")
@@ -1543,6 +1675,19 @@ this.anims.create({
   }),
   frameRate: 2,
   repeat: 0,
+});
+
+this.anims.create({
+  key: "flag",
+  frames: this.anims.generateFrameNumbers("flag", { start: 0, end: 4 }),
+  frameRate: 10,
+  repeat: -1
+});
+this.anims.create({
+  key: "foxmalmorte",
+  frames: this.anims.generateFrameNumbers("foxmalmorte", { start: 0, end: 4 }),
+  frameRate: 8,
+  repeat: 0
 });
 
 //sprites da raposa fantasma
