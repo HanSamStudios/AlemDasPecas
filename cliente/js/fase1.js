@@ -304,7 +304,7 @@ export default class fase1 extends Phaser.Scene {
       console.log("Conexão de dados aberta!");
     };
 
-    this.game.dadosJogo.onmessage = (event) => {
+  this.game.dadosJogo.onmessage = (event) => {
       const dados = JSON.parse(event.data);
 
       if (dados.type === "finalizou" && !this.jogoFinalizado) {
@@ -334,18 +334,16 @@ export default class fase1 extends Phaser.Scene {
         this.personagemRemoto.setFrame(dados.personagem.frame);
       }
 
-      if (dados.vidas !== undefined) {
-        this.vidas = dados.vidas;
-        this.atualizarCoracoes();
+ if (dados.vidas !== undefined) {
+  this.vidasRemotas = dados.vidas; // agora não sobrescreve suas próprias vidas
+}
 
-        if (this.vidas <= 0) {
-          this.scene.start("final-perdeu");
-        }
-      }
+if (dados.gameOver && !this.jogoFinalizado) {
+  this.jogoFinalizado = true;
+  this.scene.start("final-perdeu");
+}
 
-      if (dados.gameOver) {
-        this.scene.start("final-perdeu");
-      }
+
 if (dados.cristal) {
   this.cristal.forEach((cristal, i) => {
     if (cristal.objeto && cristal.objeto.body) {
@@ -1439,33 +1437,45 @@ if (dados.cristal) {
     );
     
   }
+tratarDano() {
+  if (this.personagemLocal.isInvulnerable) return;
+  this.levandoDano = true;
 
-  tratarDano () {
-    if (this.personagemLocal.isInvulnerable) return;
-    this.levandoDano = true;
+  if (this.vidas > 0) {
+    this.vidas--;
 
-    // Diminuir vida ao tomar dano
-    if (this.vidas > 0) {
-      this.vidas--;
+    // Atualizar UI corações
+    if (this.coracoes[this.vidas]) {
+      this.coracoes[this.vidas].setVisible(false);
+    }
+    if (this.animacoesDano[this.vidas]) {
+      const animDano = this.animacoesDano[this.vidas];
+      animDano.setVisible(true);
+      animDano.anims.play("dano");
+      animDano.on(
+        "animationcomplete",
+        () => {
+          animDano.setVisible(false);
+        },
+        this
+      );
+    }
 
-      // Esconder o coração perdido
-      if (this.coracoes[this.vidas]) {
-        this.coracoes[this.vidas].setVisible(false);
-      }
+    this.atualizarVidas()
 
-      // Mostrar animação de dano no mesmo lugar do coração perdido
-      if (this.animacoesDano[this.vidas]) {
-        const animDano = this.animacoesDano[this.vidas];
-        animDano.setVisible(true);
-        animDano.anims.play("dano");
-        animDano.on(
-          "animationcomplete",
-          () => {
-            animDano.setVisible(false);
-          },
-          this
+     if (this.vidas <= 0 && !this.jogoFinalizado) {
+      this.jogoFinalizado = true;
+
+      // Enviar explicitamente o gameOver para garantir
+      if (this.game.dadosJogo && this.game.dadosJogo.readyState === "open") {
+        this.game.dadosJogo.send(
+          JSON.stringify({
+            vidas: this.vidas,
+            gameOver: true,
+          })
         );
       }
+    }
 
       // **Aqui escondemos o fantasma e desativamos**
       this.fantasmaAtivado = false;
@@ -1807,19 +1817,25 @@ if (dados.cristal) {
       }
     }
   }
-  atualizarVidas () {
+   atualizarVidas () {
     this.atualizarCoracoes();
+ console.log("→ atualizarVidas chamada. vidas =", this.vidas);
 
-    if (this.game.dadosJogo && this.game.dadosJogo.readyState === "open") {
-      // Enviar as vidas atuais e se o jogo acabou
-      this.game.dadosJogo.send(
-        JSON.stringify({
-          vidas: this.vidas,
-          gameOver: this.vidas <= 0,
-        })
+  if (this.game.dadosJogo && this.game.dadosJogo.readyState === "open") {
+    console.log("→ Enviando estado via WebSocket:", {
+      vidas: this.vidas,
+      gameOver: this.vidas <= 0,
+    });
+
+    this.game.dadosJogo.send(
+      JSON.stringify({
+        vidas: this.vidas,
+        gameOver: this.vidas <= 0,
+      })
       );
     }
   }
+
   finalizarJogoLocal () {
     // Garante que a música volta ao normal
     this.fundoAtual = "back";
