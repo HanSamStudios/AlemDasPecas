@@ -72,11 +72,13 @@ export default class fase1 extends Phaser.Scene {
     this.load.audio("crystalsound", "assets/crystalsound.mp3");
     this.load.audio("jumpsound", "assets/jumpsound.mp3");
     this.load.audio("morte", "assets/morte.mp3");
+      this.load.audio("passarosound", "assets/passarosound.mp3");
     this.load.image("fceu", "assets/ceu.jpg");
     this.load.spritesheet("bomba", "assets/mapa/bomba.png", {
       frameWidth: 8,
       frameHeight: 8,
     });
+    
     // personagens (colocar o segundo depois)
     this.load.spritesheet("fox-primeiro", "assets/Spritesheet.png", {
       frameWidth: 64,
@@ -628,15 +630,15 @@ if (dados.type === "cristal-coletado") {
     );
 
     // Variáveis para vida
-    this.vidas = 3;
+    this.vidas = 5;
     this.coracoes = [];
 
     // Cria 3 corações no canto superior esquerdo
     this.coracoes = [];
     this.animacoesDano = [];
 
-    for (let i = 0; i < 3; i++) {
-      const x = 360 + i * 38;
+    for (let i = 0; i < 5; i++) {
+      const x = 320 + i * 38;
       const y = 30;
 
       // Coração visível
@@ -1499,6 +1501,8 @@ this.cristal.forEach((cristal, index) => {
           this.canAirDash = true;
           passarinho.atingido = true;
 
+          this.sound.play("passarosound")
+
           const direcao = passarinho.body.velocity.x > 0 ? 1 : -1;
 
           passarinho.setVelocityX(0);
@@ -1507,7 +1511,7 @@ this.cristal.forEach((cristal, index) => {
           this.time.delayedCall(200, () => {
             passarinho.play("passarinho");
             passarinho.setVelocityX(100 * direcao);
-            passarinho.setFlipX(direcao < 0);
+            passarinho.setFlipX(direcao > 0);
             passarinho.atingido = false;
           });
         }
