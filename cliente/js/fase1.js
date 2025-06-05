@@ -1174,6 +1174,7 @@ this.finalizarJogoLocal();
     this.personagemLocal.x = 7422.00;
     this.personagemLocal.y = 4228.00;
   }
+}
 
   // 👇 Lógica já existente do cemitério
   const dentroDoCemiterio = this.personagemLocal.x > 14012.12;
