@@ -1164,6 +1164,7 @@ this.finalizarJogoLocal();
 } else {
   // 👉 NOVA LÓGICA: Teleporta se passar de x:7361.00, mas ainda não chegou ao cemitério
   if (
+    this.personagemMorto && 
     this.personagemLocal.x > 7361.00 &&
     this.personagemLocal.x < 14012.12
   ) {
