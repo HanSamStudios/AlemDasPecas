@@ -26,6 +26,7 @@ export default class fase1 extends Phaser.Scene {
     this.load.tilemapTiledJSON("mapa", "assets/mapa/mapa.json");
     this.load.image("arvore", "assets/mapa/arvore.png");
     this.load.image("tp", "assets/mapa/tp.png");
+    this.load.image("objetivo", "assets/objetivo.png");
     this.load.image("chao", "assets/mapa/chao.png");
     this.load.image("fantasm", "assets/mapa/fantasm.png");
     this.load.image("placaa", "assets/mapa/placaa.png");
@@ -101,8 +102,20 @@ export default class fase1 extends Phaser.Scene {
   }
 
   create () {
-    
-
+    this.fundoEscuro = this.add.rectangle(0, 0, this.scale.width, this.scale.height, 0x000000, 0.6)
+  .setOrigin(0)
+  .setScrollFactor(0)
+  .setDepth(999); // abaixo da imagem de objetivo
+this.objetivoImagem = this.add.image(this.scale.width / 2, this.scale.height / 2, "objetivo")
+  .setScrollFactor(0)
+  .setDepth(1000)
+  .setOrigin(0.5)
+  .setDepth(10000)
+  .setInteractive(); // permite clique
+this.objetivoImagem.on("pointerdown", () => {
+  this.objetivoImagem.destroy(); // remove a imagem
+   this.fundoEscuro.destroy();
+});
     this.musica = this.sound.add("musicaa", {
       loop: true, // para repetir indefinidamente
       volume: 0.5, // volume entre 0 e 1
@@ -512,33 +525,9 @@ if (dados.type === "cristal-coletado") {
         .setDepth(10),
     });
 
-    this.botaoRespawn = this.add
-      .image(750, 50, "repeat")
-      .setDepth(10) // imagem do botão
-      .setScrollFactor(0)
-      .setInteractive()
-      .setDisplaySize(60, 60); // ajuste o tamanho conforme necessário
+   
+   
 
-    // Efeito visual ao pressionar
-    this.botaoRespawn.on("pointerdown", () => {
-      this.botaoRespawn.setDisplaySize(45, 45); // efeito de "apertado"
-      this.botaoRespawn.setTint(0x999999); // escurece o botão
-
-      this.personagemLocal.setPosition(this.spawnPoint.x, this.spawnPoint.y);
-      this.personagemLocal.setVelocity(0, 0);
-    });
-
-    // Restaura o botão ao soltar
-    this.botaoRespawn.on("pointerup", () => {
-      this.botaoRespawn.setDisplaySize(60, 60);
-      this.botaoRespawn.clearTint();
-    });
-
-    // Também restaura se o jogador mover o dedo/mouse para fora do botão
-    this.botaoRespawn.on("pointerout", () => {
-      this.botaoRespawn.setDisplaySize(60, 60);
-      this.botaoRespawn.clearTint();
-    });
 
     // Substituindo o botão de pulo com a imagem 'jump'
     this.botaoPulo = this.add
