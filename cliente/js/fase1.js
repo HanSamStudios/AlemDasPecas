@@ -1163,15 +1163,16 @@ this.cristal.forEach((cristal, index) => {
 this.finalizarJogoLocal();
 } else {
   // 👉 NOVA LÓGICA: Teleporta se passar de x:7361.00, mas ainda não chegou ao cemitério
+  if (this.personagemMorto) {
+  // 👇 Isso garante que o personagem só vai ser teleportado quando estiver morto e dentro da área
   if (
-    this.personagemMorto && 
     this.personagemLocal.x > 7361.00 &&
     this.personagemLocal.x < 14012.12
   ) {
-    console.log("→ Teleportando personagem de volta para o início da área");
+    console.log("→ Personagem morreu, voltando para ponto seguro");
+
     this.personagemLocal.x = 7422.00;
     this.personagemLocal.y = 4228.00;
-    return; // <- evita continuar para a lógica do cemitério neste frame
   }
 
   // 👇 Lógica já existente do cemitério
