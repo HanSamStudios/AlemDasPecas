@@ -1160,33 +1160,41 @@ this.cristal.forEach((cristal, index) => {
     verdes: this.cristaisContagem.verde,
     vermelhos: this.cristaisContagem.vermelho
   };
+this.finalizarJogoLocal();
+} else {
+  // 👉 NOVA LÓGICA: Teleporta se passar de x:7361.00, mas ainda não chegou ao cemitério
+  if (
+    this.personagemLocal.x > 7361.00 &&
+    this.personagemLocal.x < 14012.12
+  ) {
+    console.log("→ Teleportando personagem de volta para o início da área");
+    this.personagemLocal.x = 7422.00;
+    this.personagemLocal.y = 4228.00;
+    return; // <- evita continuar para a lógica do cemitério neste frame
+  }
 
+  // 👇 Lógica já existente do cemitério
+  const dentroDoCemiterio = this.personagemLocal.x > 14012.12;
 
-      this.finalizarJogoLocal();
-    } else {
-      // Se não passou do limite máximo, mantém a lógica normal do cemitério
-      const dentroDoCemiterio = this.personagemLocal.x > 14012.12;
+  if (
+    dentroDoCemiterio &&
+    !this.entrouNoCemiterio &&
+    !this.jogoFinalizado
+  ) {
+    this.entrouNoCemiterio = true;
 
-      // Evita reentrada no cemitério se o jogo já foi finalizado
-      if (
-        dentroDoCemiterio &&
-        !this.entrouNoCemiterio &&
-        !this.jogoFinalizado
-      ) {
-        this.entrouNoCemiterio = true;
+    console.log("→ Entrando no cemitério");
+    this.fundoAtual = "cemiterio";
 
-        console.log("→ Entrando no cemitério");
-        this.fundoAtual = "cemiterio";
-
-        this.musica.stop();
-        this.sound.play("fantasma", { loop: false });
-        if (!this.horrorScheduled) {
-          this.horrorScheduled = true;
-          this.time.delayedCall(4000, () => {
-            console.log("Tocando horror");
-            this.sound.play("horror", { volume: 10, loop: true });
-          });
-        }
+    this.musica.stop();
+    this.sound.play("fantasma", { loop: false });
+    if (!this.horrorScheduled) {
+      this.horrorScheduled = true;
+      this.time.delayedCall(4000, () => {
+        console.log("Tocando horror");
+        this.sound.play("horror", { volume: 10, loop: true });
+      });
+    }
 
         // Mostrar texto "FUGA" imediatamente
         this.time.delayedCall(1000, () => {
