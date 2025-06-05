@@ -1599,6 +1599,9 @@ this.time.delayedCall(750, () => {
   if (this.entrouNoCemiterio) {
     // ⚰️ Renasce no cemitério
     this.personagemLocal.setPosition(13138.67, 3389.33);
+    if (this.sound && this.sound.isPlaying('horror')) {
+      this.sound.stopByKey('horror');
+    }
   } else if (xAtual > 7361.00 && xAtual < 14012.12) {
     // 📍 Renasce no ponto fixo se estiver entre os limites
     this.personagemLocal.setPosition(7422.00, 4228.00);
