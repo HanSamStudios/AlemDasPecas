@@ -1161,23 +1161,9 @@ this.cristal.forEach((cristal, index) => {
     vermelhos: this.cristaisContagem.vermelho
   };
 this.finalizarJogoLocal();
-} else {
-  // 👉 NOVA LÓGICA: Teleporta se passar de x:7361.00, mas ainda não chegou ao cemitério
-  if (this.personagemMorto) {
-  // 👇 Isso garante que o personagem só vai ser teleportado quando estiver morto e dentro da área
-  if (
-    this.personagemLocal.x > 7361.00 &&
-    this.personagemLocal.x < 14012.12
-  ) {
-    console.log("→ Personagem morreu, voltando para ponto seguro");
-
-    this.personagemLocal.x = 7422.00;
-    this.personagemLocal.y = 4228.00;
-  }
-}
-
-  // 👇 Lógica já existente do cemitério
-  const dentroDoCemiterio = this.personagemLocal.x > 14012.12;
+    } else {
+      // Se não passou do limite máximo, mantém a lógica normal do cemitério
+      const dentroDoCemiterio = this.personagemLocal.x > 14012.12;
 
   if (
     dentroDoCemiterio &&
@@ -1607,16 +1593,22 @@ tratarDano() {
 
     this.isDashing = true;
     this.jumpPressed = false;
+this.time.delayedCall(750, () => {
+  const xAtual = this.personagemLocal.x;
 
-    this.time.delayedCall(750, () => {
-      if (this.entrouNoCemiterio) {
-        this.personagemLocal.setPosition(13138.67, 3389.33);
-        this.personagemLocal.setVelocity(0, 0); // reseta movimento
-        this.personagemLocal.clearTint();
-      } else {
-        this.personagemLocal.clearTint();
-        this.personagemLocal.setPosition(this.spawnPoint.x, this.spawnPoint.y);
-      }
+  if (this.entrouNoCemiterio) {
+    // ⚰️ Renasce no cemitério
+    this.personagemLocal.setPosition(13138.67, 3389.33);
+  } else if (xAtual > 7361.00 && xAtual < 14012.12) {
+    // 📍 Renasce no ponto fixo se estiver entre os limites
+    this.personagemLocal.setPosition(7422.00, 4228.00);
+  } else {
+    // 🏠 Renasce no ponto padrão
+    this.personagemLocal.setPosition(this.spawnPoint.x, this.spawnPoint.y);
+  }
+
+  this.personagemLocal.setVelocity(0, 0); // reseta movimento
+  this.personagemLocal.clearTint();
 
       this.isDashing = false;
       this.personagemLocal.isInvulnerable = false;
