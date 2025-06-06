@@ -73,7 +73,7 @@ export default class abertura extends Phaser.Scene {
             .catch((error) => {
                 console.error("Erro ao acessar o microfone:", error);
                   this.game.midias = null; // ou false, dependendo de como você usa depois
-            this.scene.start('precarregamento');
+            this.scene.start('final-acabado');
             });
     }
     update() {
