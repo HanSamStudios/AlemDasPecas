@@ -34,7 +34,7 @@ export default class Detonou extends Phaser.Scene {
               })
               .catch(function (error) {
                 console.error(error)
-                alert("erro ao adicionar crédito: (")
+                alert("erro ao adicionar crédito :(")
               });
           }
         },
