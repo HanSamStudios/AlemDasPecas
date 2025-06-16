@@ -842,6 +842,32 @@ this.cristal.forEach((cristal, index) => {
       this.canDash = true;
       this.canAirDash = true;
     });
+    this.physics.add.overlap(
+    this.personagemLocal,
+    this.passarinhos,
+    (personagem, passarinho) => {
+      if (!passarinho.atingido) {
+        personagem.setVelocityY(-425);
+        this.canDash = true;
+        this.canAirDash = true;
+        passarinho.atingido = true;
+
+        this.sound.play("passarosound");
+
+        const direcao = passarinho.body.velocity.x > 0 ? 1 : -1;
+
+        passarinho.setVelocityX(0);
+        passarinho.play("passarinho-dano");
+
+        this.time.delayedCall(200, () => {
+          passarinho.play("passarinho");
+          passarinho.setVelocityX(100 * direcao);
+          passarinho.setFlipX(direcao > 0);
+          passarinho.atingido = false;
+        });
+      }
+    }
+  )
     this.passarinhos.minX = 8180.0;
     this.passarinhos.maxX = 8352.0;
     /*
@@ -1475,34 +1501,9 @@ this.finalizarJogoLocal();
 
   if (this.jogoFinalizado) return;  // para não mexer no personagem após fim
   // resto do update
-
-    // Também aqui pode ir a lógica do "pulão":
-    this.physics.add.overlap(
-      this.personagemLocal,
-      this.passarinhos,
-      (personagem, passarinho) => {
-        if (!passarinho.atingido) {
-          personagem.setVelocityY(-425);
-          this.canDash = true;
-          this.canAirDash = true;
-          passarinho.atingido = true;
-
-          this.sound.play("passarosound")
-
-          const direcao = passarinho.body.velocity.x > 0 ? 1 : -1;
-
-          passarinho.setVelocityX(0);
-          passarinho.play("passarinho-dano");
-
-          this.time.delayedCall(200, () => {
-            passarinho.play("passarinho");
-            passarinho.setVelocityX(100 * direcao);
-            passarinho.setFlipX(direcao > 0);
-            passarinho.atingido = false;
-          });
-        }
-      }
-    );
+        
+      
+  
     
   }
 tratarDano() {
