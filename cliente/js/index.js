@@ -30,6 +30,11 @@ class Game extends Phaser.Game {
       console.log(`Usuário ${this.socket.id} conectado no servidor`);
     });
 
+      if (Object.keys(jogadores).length >= 3) {
+    console.log("A sala tem 2 jogadores.");
+     window.alert("Sala cheia!");
+  }
+
     this.scene.add("abertura", abertura);
     this.scene.add("precarregamento", precarregamento);
     this.scene.add("sala", sala);
