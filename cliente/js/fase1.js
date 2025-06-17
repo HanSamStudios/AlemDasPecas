@@ -209,7 +209,11 @@ this.objetivoImagem.on("pointerdown", () => {
       this.add.image(obj.x, obj.y, "casa").setOrigin(0, 1); // Origem na base
     });
 
-    if (this.game.jogadores.primeiro == this.game.socket.id) {
+    if (Object.keys(this.game.jogadores).length >= 2) {
+  window.alert("Ta cheio");
+  this.game.stop();
+  this.game.start("sala");
+    } else if (this.game.jogadores.primeiro == this.game.socket.id) {
       this.game.remoteConnection = new RTCPeerConnection(this.game.iceServers);
       this.game.dadosJogo = this.game.remoteConnection.createDataChannel(
         "dadosJogo",
@@ -311,10 +315,10 @@ this.objetivoImagem.on("pointerdown", () => {
       this.personagemRemoto = this.add
         .sprite(spawnPoint.x, spawnPoint.y, "fox-primeiro")
         .setDepth(6);
-    } if (this.game.jogadores.length > 2) {
-  window.alert("Ta cheio");
-  this.game.stop();
-  this.game.start("sala");
+    } else {
+      window.alert("ta cheio");
+      this.game.stop();
+      this.game.start("sala");
     }
 
     this.game.dadosJogo.onopen = () => {
