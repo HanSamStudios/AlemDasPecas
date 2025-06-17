@@ -1,7 +1,12 @@
 const express = require('express')
 const app = express()
 const server = require('http').Server(app)
-const io = require('socket.io')(server)
+const io = require('socket.io')(server, {
+  cors: {
+    origin: "*", // Permite conexões de qualquer origem
+    methods: ["GET", "POST"]
+  }
+});
 const port = process.env.port || 3000
 
 io.on('connection', (socket) => {
