@@ -8,6 +8,15 @@ io.on('connection', (socket) => {
   console.log(`Usuário ${socket.id} conectado no servidor`)
 
   socket.on("entrar-na-sala", (sala) => {
+    const salaAtual = io.sockets.adapter.rooms.get(sala);
+    const numJogadores = salaAtual ? salaAtual.size : 0;
+
+    if (numJogadores >= 2) {
+      // Sala cheia, avisa o jogador
+      socket.emit("sala-cheia");
+      return;
+    }
+    
     socket.join(sala)
     console.log(`Usuário ${socket.id} entrou na sala ${sala}`)
 
