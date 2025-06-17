@@ -209,7 +209,8 @@ this.objetivoImagem.on("pointerdown", () => {
       this.add.image(obj.x, obj.y, "casa").setOrigin(0, 1); // Origem na base
     });
 
-    if (Object.keys(this.game.jogadores).length >= 3) {
+   if (Object.keys(this.game.jogadores).length >= 2) {
+  // Se já houver dois jogadores, a sala está cheia
   window.alert("Ta cheio");
   this.game.stop();
   this.game.start("sala");
