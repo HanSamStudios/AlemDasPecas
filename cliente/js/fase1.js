@@ -2012,23 +2012,26 @@ this.time.delayedCall(750, () => {
       }
 
       // Aguarda 4 segundos antes de trocar de cena, para mostrar as mensagens
-      this.time.delayedCall(7000, () => {
-        if (
-          this.cristaisContagem.verde === 11 &&
-          this.cristaisContagem.vermelho === 7
-        ) {
-          this.scene.start("detonou");
-        } else {
-          this.scene.start("final-acabado", {
-            pontuacao: this.pontuacao,
-            verdes: this.cristaisContagem.verde,
-            vermelhos: this.cristaisContagem.vermelho,
-          });
-        }
-      });
-    },
+ this.time.delayedCall(7000, () => {
+  let pegouTodosCristais =
+    this.cristaisContagem.verde === 11 &&
+    this.cristaisContagem.vermelho === 7;
+
+  let creditos = pegouTodosCristais ? 1500 : 500;
+
+  this.scene.start("final-unico", {
+    pontuacao: this.pontuacao,
+    verdes: this.cristaisContagem.verde,
+    vermelhos: this.cristaisContagem.vermelho,
+    creditos: creditos,
   });
+})
+    }
+  })
 }
+  
+        
+
 finalizarJogoRemoto(pontuacao, verdes, vermelhos) {
   this.fundoAtual = "back";
   this.sound.stopByKey("horror");
@@ -2095,21 +2098,17 @@ finalizarJogoRemoto(pontuacao, verdes, vermelhos) {
         delay: 2000,
       });
 
-      this.time.delayedCall(7000, () => {
-        console.log(`[REMOTO] Verificando cristais - verdes: ${verdes}, vermelhos: ${vermelhos}`);
-        if (verdes === 11 && vermelhos === 7) {
-            console.log("[REMOTO] Trocando para 'detonou'");
-          this.scene.start("detonou");
-        } else {
-            console.log("[REMOTO] Trocando para 'final-acabado'");
-          this.scene.start("final-acabado", {
-            
-       pontuacao: this.pontuacao,
-            verdes: this.cristaisContagem.verde,
-            vermelhos: this.cristaisContagem.vermelho,
-          });
-        }
-      });
+    this.time.delayedCall(7000, () => {
+  let pegouTodosCristais = verdes === 11 && vermelhos === 7;
+  let creditos = pegouTodosCristais ? 1500 : 500;
+
+  this.scene.start("final-unico", {
+    pontuacao: pontuacao,
+    verdes: verdes,
+    vermelhos: vermelhos,
+    creditos: creditos,
+  });
+});
     },
   });
 }

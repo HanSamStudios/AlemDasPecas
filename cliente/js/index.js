@@ -8,6 +8,7 @@ import fase1 from "./fase1.js";
 import finalacabado from "./final-acabado.js";
 import finalperdeu from "./final-perdeu.js";
 import detonou from "./detonou.js";
+import finalunico from "./final-unico.js";
 
 class Game extends Phaser.Game {
   constructor() {
@@ -37,6 +38,7 @@ class Game extends Phaser.Game {
     this.scene.add("finalacabado", finalacabado);
     this.scene.add("finalperdeu", finalperdeu);
     this.scene.add("detonou", detonou);
+    this.scene.add("finalunico", finalunico);
     this.scene.start("abertura");
   }
 }
