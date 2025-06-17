@@ -1,7 +1,3 @@
-import Phaser from 'phaser';
-import WebFont from 'webfontloader';
-import axios from 'axios';
-
 export default class finalunico extends Phaser.Scene {
   constructor() {
     super('final-unico');
