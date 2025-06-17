@@ -21,6 +21,7 @@ export default class finalunico extends Phaser.Scene {
   }
 
   create(data) {
+
     const pegouTodos = (data.verdes === 11 && data.vermelhos === 7);
     const creditos = pegouTodos ? 1500 : 500;
     const imagem = pegouTodos ? 'detonou' : 'parabens';
@@ -43,7 +44,7 @@ export default class finalunico extends Phaser.Scene {
               {
                 headers: {
                   Authorization: `Bearer ${res.credential}`,
-                }
+                },
               }
             )
             .then(function (response) {
