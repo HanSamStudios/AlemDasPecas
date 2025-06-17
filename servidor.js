@@ -10,8 +10,10 @@ io.on('connection', (socket) => {
   socket.on("entrar-na-sala", (sala) => {
     const salaAtual = io.sockets.adapter.rooms.get(sala);
     const numJogadores = salaAtual ? salaAtual.size : 0;
+    console.log(`Número de jogadores na sala ${sala}: ${numJogadores}`);
 
     if (numJogadores >= 2) {
+      console.log(`Sala ${sala} está cheia.`);
       // Sala cheia, avisa o jogador
       socket.emit("sala-cheia");
       return;
