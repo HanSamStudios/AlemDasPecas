@@ -208,131 +208,132 @@ this.objetivoImagem.on("pointerdown", () => {
     this.tilemapMapa.getObjectLayer("casa").objects.forEach((obj) => {
       this.add.image(obj.x, obj.y, "casa").setOrigin(0, 1); // Origem na base
     });
-
-   if (Object.keys(this.game.jogadores).length >= 3) {
-  // Se já houver dois jogadores, a sala está cheia
+if (Object.keys(this.game.jogadores).length >= 2) {  // Se já houver 2 jogadores, a sala está cheia
   window.alert("Ta cheio");
   this.game.stop();
   this.game.start("sala");
-    } else if (this.game.jogadores.primeiro == this.game.socket.id) {
-      this.game.remoteConnection = new RTCPeerConnection(this.game.iceServers);
-      this.game.dadosJogo = this.game.remoteConnection.createDataChannel(
-        "dadosJogo",
-        { negotiated: true, id: 0 }
+} else if (this.game.jogadores.primeiro == this.game.socket.id) {
+  this.game.remoteConnection = new RTCPeerConnection(this.game.iceServers);
+  this.game.dadosJogo = this.game.remoteConnection.createDataChannel(
+    "dadosJogo",
+    { negotiated: true, id: 0 }
+  );
+
+  this.game.remoteConnection.onicecandidate = ({ candidate }) => {
+    this.game.socket.emit("candidate", this.game.sala, candidate);
+  };
+
+  this.game.remoteConnection.ontrack = ({ streams: [stream] }) => {
+    this.game.audio.srcObject = stream;
+  };
+
+  if (this.game.midias) {
+    this.game.midias.getTracks().forEach((track) => {
+      this.game.remoteConnection.addTrack(track, this.game.midias);
+    });
+  }
+
+  this.game.socket.on("offer", (description) => {
+    this.game.remoteConnection
+      .setRemoteDescription(description)
+      .then(() => this.game.remoteConnection.createAnswer())
+      .then((answer) =>
+        this.game.remoteConnection.setLocalDescription(answer)
+      )
+      .then(() =>
+        this.game.socket.emit(
+          "answer",
+          this.game.sala,
+          this.game.remoteConnection.localDescription
+        )
+      )
+      .catch((error) => console.error("Erro ao criar resposta:", error));
+  });
+
+  this.game.socket.on("candidate", (candidate) => {
+    this.game.remoteConnection.addIceCandidate(candidate);
+  });
+
+  this.personagemLocal = this.physics.add
+    .sprite(spawnPoint.x, spawnPoint.y, "fox-primeiro")
+    .setDepth(10);
+  this.personagemLocal.body.setSize(40, 50);
+  this.personagemLocal.body.setOffset(12, 14);
+  this.personagemLocal.body.setGravityY(10);
+
+  this.personagemRemoto = this.add
+    .sprite(spawnPoint.x, spawnPoint.y, "fox-segundo")
+    .setDepth(6);
+} else if (this.game.jogadores.segundo == this.game.socket.id) {
+  this.game.localConnection = new RTCPeerConnection(this.game.iceServers);
+  this.game.dadosJogo = this.game.localConnection.createDataChannel(
+    "dadosJogo",
+    { negotiated: true, id: 0 }
+  );
+
+  this.game.localConnection.onicecandidate = ({ candidate }) => {
+    this.game.socket.emit("candidate", this.game.sala, candidate);
+  };
+
+  this.game.localConnection.ontrack = ({ streams: [stream] }) => {
+    this.game.audio.srcObject = stream;
+  };
+
+  if (this.game.midias) {
+    this.game.midias
+      .getTracks()
+      .forEach((track) =>
+        this.game.localConnection.addTrack(track, this.game.midias)
       );
+  }
 
-      this.game.remoteConnection.onicecandidate = ({ candidate }) => {
-        this.game.socket.emit("candidate", this.game.sala, candidate);
-      };
+  this.game.localConnection
+    .createOffer()
+    .then((offer) => this.game.localConnection.setLocalDescription(offer))
+    .then(() =>
+      this.game.socket.emit(
+        "offer",
+        this.game.sala,
+        this.game.localConnection.localDescription
+      )
+    );
 
-      this.game.remoteConnection.ontrack = ({ streams: [stream] }) => {
-        this.game.audio.srcObject = stream;
-      };
+  this.game.socket.on("answer", (description) => {
+    this.game.localConnection.setRemoteDescription(description);
+  });
 
-      if (this.game.midias) {
-        this.game.midias.getTracks().forEach((track) => {
-          this.game.remoteConnection.addTrack(track, this.game.midias);
-        });
-      }
-      this.game.socket.on("offer", (description) => {
-        this.game.remoteConnection
-          .setRemoteDescription(description)
-          .then(() => this.game.remoteConnection.createAnswer())
-          .then((answer) =>
-            this.game.remoteConnection.setLocalDescription(answer)
-          )
-          .then(() =>
-            this.game.socket.emit(
-              "answer",
-              this.game.sala,
-              this.game.remoteConnection.localDescription
-            )
-          )
-          .catch((error) => console.error("Erro ao criar resposta:", error));
-      });
+  this.game.socket.on("candidate", (candidate) => {
+    this.game.localConnection.addIceCandidate(candidate);
+  });
 
-      this.game.socket.on("candidate", (candidate) => {
-        this.game.remoteConnection.addIceCandidate(candidate);
-      });
+  this.personagemLocal = this.physics.add
+    .sprite(spawnPoint.x, spawnPoint.y, "fox-segundo")
+    .setDepth(10);
+  this.personagemLocal.body.setSize(40, 50);
+  this.personagemLocal.body.setOffset(12, 14);
+  this.personagemLocal.body.setGravityY(10);
 
-      this.personagemLocal = this.physics.add
-        .sprite(spawnPoint.x, spawnPoint.y, "fox-primeiro")
-        .setDepth(10);
-      this.personagemLocal.body.setSize(40, 50);
-      this.personagemLocal.body.setOffset(12, 14);
-      this.personagemLocal.body.setGravityY(10);
+  this.personagemRemoto = this.add
+    .sprite(spawnPoint.x, spawnPoint.y, "fox-primeiro")
+    .setDepth(6);
+} else {
+  // Caso a sala já tenha 2 jogadores e um terceiro tente entrar
+  window.alert("Ta cheio");
+  this.game.stop();
+  this.game.start("sala");
+}
 
-      this.personagemRemoto = this.add
-        .sprite(spawnPoint.x, spawnPoint.y, "fox-segundo")
-        .setDepth(6);
-    } else if (this.game.jogadores.segundo == this.game.socket.id) {
-      this.game.localConnection = new RTCPeerConnection(this.game.iceServers);
-      this.game.dadosJogo = this.game.localConnection.createDataChannel(
-        "dadosJogo",
-        { negotiated: true, id: 0 }
-      );
+this.game.dadosJogo.onopen = () => {
+  console.log("Conexão de dados aberta!");
+};
 
-      this.game.localConnection.onicecandidate = ({ candidate }) => {
-        this.game.socket.emit("candidate", this.game.sala, candidate);
-      };
+this.game.dadosJogo.onmessage = (event) => {
+  const dados = JSON.parse(event.data);
 
-      this.game.localConnection.ontrack = ({ streams: [stream] }) => {
-        this.game.audio.srcObject = stream;
-      };
-
-      if (this.game.midias) {
-        this.game.midias
-          .getTracks()
-          .forEach((track) =>
-            this.game.localConnection.addTrack(track, this.game.midias)
-          );
-      }
-
-      this.game.localConnection
-        .createOffer()
-        .then((offer) => this.game.localConnection.setLocalDescription(offer))
-        .then(() =>
-          this.game.socket.emit(
-            "offer",
-            this.game.sala,
-            this.game.localConnection.localDescription
-          )
-        );
-
-      this.game.socket.on("answer", (description) => {
-        this.game.localConnection.setRemoteDescription(description);
-      });
-
-      this.game.socket.on("candidate", (candidate) => {
-        this.game.localConnection.addIceCandidate(candidate);
-      });
-
-      this.personagemLocal = this.physics.add
-        .sprite(spawnPoint.x, spawnPoint.y, "fox-segundo")
-        .setDepth(10);
-      this.personagemLocal.body.setSize(40, 50);
-      this.personagemLocal.body.setOffset(12, 14);
-      this.personagemLocal.body.setGravityY(10);
-      this.personagemRemoto = this.add
-        .sprite(spawnPoint.x, spawnPoint.y, "fox-primeiro")
-        .setDepth(6);
-    } else {
-      window.alert("ta cheio");
-      this.game.stop();
-      this.game.start("sala");
-    }
-
-    this.game.dadosJogo.onopen = () => {
-      console.log("Conexão de dados aberta!");
-    };
-
-  this.game.dadosJogo.onmessage = (event) => {
-      const dados = JSON.parse(event.data);
-
-     if (dados.type === "finalizou" && !this.jogoFinalizado) {
-  console.log("→ Recebido sinal de finalização do outro jogador");
-  this.jogoFinalizado = true;
-
+  if (dados.type === "finalizou" && !this.jogoFinalizado) {
+    console.log("→ Recebido sinal de finalização do outro jogador");
+    this.jogoFinalizado = true;
+  
   
 
   const totalVerdes = dados.verdes ?? 0;
