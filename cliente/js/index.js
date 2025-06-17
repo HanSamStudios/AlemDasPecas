@@ -43,7 +43,7 @@ class Game extends Phaser.Game {
 
     // Quando a sala for atualizada, verifica o número de jogadores
     this.socket.on("salaAtualizada", (quantidadeJogadores) => {
-      if (quantidadeJogadores >= 3) {
+      if (quantidadeJogadores >= 2) {
         console.log("Sala cheia!");
         this.game.stop(); // Para o jogo
         this.game.start("sala"); // Redireciona para a tela de sala
