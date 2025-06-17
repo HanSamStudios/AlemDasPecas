@@ -209,12 +209,11 @@ this.objetivoImagem.on("pointerdown", () => {
       this.add.image(obj.x, obj.y, "casa").setOrigin(0, 1); // Origem na base
     });
 
-   if (this.game.jogadores.primeiro && this.game.jogadores.segundo) {
+    if (Object.keys(this.game.jogadores).length >= 2) {
   window.alert("Ta cheio");
   this.game.stop();
   this.game.start("sala");
-  return;
-} else if (this.game.jogadores.primeiro == this.game.socket.id) {
+    } else if (this.game.jogadores.primeiro == this.game.socket.id) {
       this.game.remoteConnection = new RTCPeerConnection(this.game.iceServers);
       this.game.dadosJogo = this.game.remoteConnection.createDataChannel(
         "dadosJogo",
