@@ -65,11 +65,6 @@ export default class finalunico extends Phaser.Scene {
       }
     });
 
-    if (!this.fontReady && !pegouTodos) {
-      this.time.delayedCall(100, () => this.create(data), [], this);
-      return;
-    }
-
     this.add.image(0, 0, imagem).setOrigin(0);
 
     // Só mostra os textos se não pegou todos os cristais
