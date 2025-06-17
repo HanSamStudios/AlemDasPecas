@@ -311,10 +311,10 @@ this.objetivoImagem.on("pointerdown", () => {
       this.personagemRemoto = this.add
         .sprite(spawnPoint.x, spawnPoint.y, "fox-primeiro")
         .setDepth(6);
-    } else {
-      window.alert("JSala");
-      this.game.stop();
-      this.game.start("sala");
+    } if (this.game.jogadores.length > 2) {
+  window.alert("Ta cheio");
+  this.game.stop();
+  this.game.start("sala");
     }
 
     this.game.dadosJogo.onopen = () => {
