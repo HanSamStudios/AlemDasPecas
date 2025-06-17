@@ -90,17 +90,9 @@ export default class sala extends Phaser.Scene {
       
     })
     this.game.socket.on("sala-cheia", () => {
-
-
       window.alert("Sala cheia! Tente outra sala.");
-
-
       this.scene.stop();
-
-
       this.scene.start("sala");
-
-
     });
   }
 
