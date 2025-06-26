@@ -12,6 +12,7 @@ io.on('connection', (socket) => {
   const numJogadores = salaAtual ? salaAtual.size : 0;
 
   if (numJogadores >= 2) {
+    console.log(`[SERVIDOR] Sala ${sala} cheia (${numJogadores} jogadores)`);
     socket.emit("sala-cheia");
     return;
   }
