@@ -7,25 +7,26 @@ const port = process.env.port || 3000
 io.on('connection', (socket) => {
   console.log(`Usuário ${socket.id} conectado no servidor`)
 
-  socket.on("entrar-na-sala", (sala) => {
-    socket.join(sala)
-    console.log(`Usuário ${socket.id} entrou na sala ${sala}`)
+ socket.on("entrar-na-sala", (sala) => {
+  const salaAtual = io.sockets.adapter.rooms.get(sala);
+  const numJogadores = salaAtual ? salaAtual.size : 0;
 
-    let jogadores = {}
-    if (io.sockets.adapter.rooms.get(sala).size === 1) {
-      jogadores = {
-        primeiro: socket.id,
-        segundo: undefined,
-      }
-    } else if (io.sockets.adapter.rooms.get(sala).size === 2) {
-      const [primeiro] = io.sockets.adapter.rooms.get(sala)
-      jogadores = {
-        primeiro,
-        segundo: socket.id,
-      }
-    }
-    io.to(sala).emit("jogadores", jogadores)
-  })
+  if (numJogadores >= 2) {
+    socket.emit("sala-cheia");
+    return;
+  }
+
+  socket.join(sala);
+  console.log(`Usuário ${socket.id} entrou na sala ${sala}`);
+
+  const jogadoresNaSala = Array.from(io.sockets.adapter.rooms.get(sala));
+  let jogadores = {
+    primeiro: jogadoresNaSala[0],
+    segundo: jogadoresNaSala[1]
+  };
+
+  io.to(sala).emit("jogadores", jogadores);
+});
 
   socket.on("offer", (sala, description) => { 
     socket.to(sala).emit("offer", description)
