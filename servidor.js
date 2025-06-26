@@ -8,35 +8,23 @@ io.on('connection', (socket) => {
   console.log(`Usuário ${socket.id} conectado no servidor`)
 
   socket.on("entrar-na-sala", (sala) => {
-    const salaAtual = io.sockets.adapter.rooms.get(sala);
-    const numJogadores = salaAtual ? salaAtual.size : 0;
-    console.log(`Número de jogadores na sala ${sala}: ${numJogadores}`);
+    socket.join(sala)
+    console.log(`Usuário ${socket.id} entrou na sala ${sala}`)
 
-    if (numJogadores >= 3) {
-      console.log(`Sala ${sala} está cheia.`);
-      // Sala cheia, avisa o jogador
-      socket.emit("sala-cheia");
-      return;
-    }
-
-    // Adiciona o jogador à sala somente se não estiver cheia
-    socket.join(sala);
-    console.log(`Usuário ${socket.id} entrou na sala ${sala}`);
-
-    let jogadores = {};
+    let jogadores = {}
     if (io.sockets.adapter.rooms.get(sala).size === 1) {
       jogadores = {
         primeiro: socket.id,
         segundo: undefined,
-      };
+      }
     } else if (io.sockets.adapter.rooms.get(sala).size === 2) {
-      const [primeiro] = io.sockets.adapter.rooms.get(sala);
+      const [primeiro] = io.sockets.adapter.rooms.get(sala)
       jogadores = {
         primeiro,
         segundo: socket.id,
-      };
+      }
     }
-    io.to(sala).emit("jogadores", jogadores);
+    io.to(sala).emit("jogadores", jogadores)
   })
 
   socket.on("offer", (sala, description) => { 
