@@ -281,11 +281,7 @@ this.objetivoImagem.on("pointerdown", () => {
           .forEach((track) =>
             this.game.localConnection.addTrack(track, this.game.midias)
           );
-      } else { 
-        window.alert("Sala cheia!")
-      this.scene.stop()
-      this.scene.start("sala")
-      }
+        }
 
       this.game.localConnection
         .createOffer()
