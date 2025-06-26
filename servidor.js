@@ -38,7 +38,7 @@ io.on('connection', (socket) => {
     socket.to(sala).emit("candidate", candidate)
   })
 
-  socket.on('disconnect', (socket) => {
+  socket.on('disconnect', () => {
     console.log(`Usuário ${socket.id} desconectado do servidor`)
   })
 })
