@@ -11,10 +11,7 @@ io.on('connection', (socket) => {
   const salaAtual = io.sockets.adapter.rooms.get(sala);
   const numJogadores = salaAtual ? salaAtual.size : 0;
 
-   console.log(`[SERVIDOR] Tentando entrar na sala ${sala}, jogadores atualmente: ${numJogadores}`);
-
   if (numJogadores >= 2) {
-    console.log(`[SERVIDOR] Sala ${sala} cheia (${numJogadores} jogadores)`);
     socket.emit("sala-cheia");
     return;
   }
@@ -42,7 +39,7 @@ io.on('connection', (socket) => {
     socket.to(sala).emit("candidate", candidate)
   })
 
-  socket.on('disconnect', () => {
+  socket.on('disconnect', (socket) => {
     console.log(`Usuário ${socket.id} desconectado do servidor`)
   })
 })
