@@ -16,9 +16,9 @@ export default class sala extends Phaser.Scene {
     });
   }
 
-  create () { 
+  create () {
     if (!this.fontReady) {
-      this.time.delayedCall(100, () => this.create(), [], this); // tenta de novo
+      this.time.delayedCall(100, () => this.create(), [], this); // tenta de novo até a fonte carregar
       return;
     }
 
@@ -38,7 +38,7 @@ export default class sala extends Phaser.Scene {
     ]
 
     // Cria os botões para as salas
-    this.salas.forEach((sala) => { 
+    this.salas.forEach((sala) => {
       sala.botao = this.add.text(sala.x, sala.y, sala.numero, {
         fontSize: '32px',
         fontFamily: 'game-over',
@@ -79,21 +79,69 @@ export default class sala extends Phaser.Scene {
     })
     this.dotsTimer.paused = true // começa pausada
 
+    // NOVO: Criar overlay preto mais opaco para quando a sala tiver 3+ jogadores (tela cheia individual)
+    this.fullRoomOverlay = this.add.rectangle(0, 0, this.scale.width, this.scale.height, 0x000000, 0.9)
+      .setOrigin(0)
+      .setDepth(12) // Coloca este overlay acima dos outros elementos
+      .setVisible(false);
+
+    // NOVO: Texto "SALA CHEIA! Aguardando o jogo começar..."
+    this.fullRoomText = this.add.text(this.scale.width/2, this.scale.height/2, 'SALA CHEIA! Aguardando o jogo começar...', {
+      fontSize: '48px', // Fonte maior para a mensagem de sala cheia
+      fontFamily: 'game-over',
+      color: '#ffffff'
+    }).setOrigin(0.5).setDepth(13).setVisible(false);
+
+
     // Escuta resposta do servidor quando entrarem os jogadores
-    this.game.socket.on("jogadores", (jogadores) => {
-      if (jogadores.segundo) {
-        this.hideWaitingOverlay()
-        this.game.jogadores = jogadores
-        this.scene.stop()
-        this.scene.start("fase1")
+    // AGORA 'jogadoresRecebidos' É UM ARRAY DE IDs DE SOCKET!
+    this.game.socket.on("jogadores", (jogadoresRecebidos) => {
+      console.log("[CLIENTE] Recebeu lista de jogadores:", jogadoresRecebidos);
+
+      // Se há pelo menos 2 jogadores, significa que a fase1 pode potencialmente iniciar
+      if (jogadoresRecebidos.length >= 2) {
+        this.hideWaitingOverlay(); // Esconde o overlay de "Esperando jogador..."
+
+        // Armazena os IDs dos dois primeiros jogadores para compatibilidade com a estrutura esperada
+        this.game.jogadores = {
+          primeiro: jogadoresRecebidos[0],
+          segundo: jogadoresRecebidos[1] || null // O segundo pode ser null se for o primeiro a entrar, mas a condição acima já garante 2
+        };
+
+        // Se o jogador atual é o primeiro ou o segundo a entrar na sala, inicia a fase1
+        // (Assumimos que 'this.game.socket.id' é o ID do socket do cliente atual)
+        if (this.game.socket.id === jogadoresRecebidos[0] || this.game.socket.id === jogadoresRecebidos[1]) {
+            this.scene.stop();
+            this.scene.start("fase1");
+        } else {
+            // Se o jogador atual é o terceiro ou subsequente, ele não inicia a fase1 aqui.
+            // A mensagem de sala cheia individual já terá sido ativada para ele.
+            // Certifica-se que o overlay de espera não reapareça
+            this.hideWaitingOverlay();
+        }
+
+      } else {
+        // Se há menos de 2 jogadores (apenas 1), continua mostrando o overlay de espera
+        this.showWaitingOverlay();
+        this.hideFullRoomOverlay(); // Garante que o overlay de sala cheia não esteja visível
       }
-      
-    })
+    });
+
+    // REMOVIDO: Antiga lógica do window.alert para "sala-cheia"
+    /*
     this.game.socket.on("sala-cheia", () => {
       console.log("[CLIENTE] Recebeu sala-cheia");
       window.alert("Sala cheia! Tente outra sala.");
       this.scene.stop();
       this.scene.start("sala");
+    });
+    */
+
+    // NOVO: Listener para o evento individual de sala cheia (para o 3º jogador em diante)
+    this.game.socket.on("sala-cheia-individual", () => {
+      console.log("[CLIENTE] Recebeu sala-cheia-individual. Mostrando overlay 'Sala Cheia' para este jogador.");
+      this.hideWaitingOverlay(); // Esconde o overlay de "Esperando jogador..."
+      this.showFullRoomOverlay(); // Mostra o overlay de "Sala Cheia!" para ESTE cliente
     });
   }
 
@@ -107,5 +155,16 @@ export default class sala extends Phaser.Scene {
     this.waitingOverlay.setVisible(false)
     this.waitingText.setVisible(false)
     this.dotsTimer.paused = true
+  }
+
+  // NOVO: Funções para controlar o overlay de sala cheia (3+ jogadores)
+  showFullRoomOverlay() {
+    this.fullRoomOverlay.setVisible(true);
+    this.fullRoomText.setVisible(true);
+  }
+
+  hideFullRoomOverlay() {
+    this.fullRoomOverlay.setVisible(false);
+    this.fullRoomText.setVisible(false);
   }
 }
