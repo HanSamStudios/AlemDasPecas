@@ -16,13 +16,14 @@ io.on('connection', (socket) => {
     return;
   }
 
-  socket.join(sala);
+  socket.join(sala); // Só entra aqui se não estiver cheia
+
   console.log(`Usuário ${socket.id} entrou na sala ${sala}`);
 
   const jogadoresNaSala = Array.from(io.sockets.adapter.rooms.get(sala));
   let jogadores = {
     primeiro: jogadoresNaSala[0],
-    segundo: jogadoresNaSala[1]
+    segundo: jogadoresNaSala[1] || null
   };
 
   io.to(sala).emit("jogadores", jogadores);
