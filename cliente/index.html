@@ -2,47 +2,84 @@
 <head>
     <title>Sprint Fox</title>
     <link rel="stylesheet" type="text/css" href="./main.css"/>
-     <link rel="icon" type="image/png" href="assets/icon.png">
-     <link rel="manifest" href="manifest.json">
-     <link rel="apple-touch-icon" href="assets/icon.png" sizes="192x192">
-     <link rel="apple-touch-icon" href="assets/icone.png" sizes="512x512">
-  <style>
-    @font-face {
-      font-family: 'game-over';
-      src: url('/assets/game-over.ttf') format('truetype');
-      font-weight: normal;
-      font-style: normal;
-    }
+    <link rel="icon" type="image/png" href="assets/icon.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="assets/icon.png" sizes="192x192">
+    <link rel="apple-touch-icon" href="assets/icone.png" sizes="512x512">
+    
+    <style>
+      @font-face {
+        font-family: 'game-over';
+        src: url('/assets/game-over.ttf') format('truetype');
+        font-weight: normal;
+        font-style: normal;
+      }
 
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: 'game-over', sans-serif; /* opcional para o corpo */
-    }
-  </style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: 'game-over', sans-serif;
+      }
 
-  <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js"></script>
+      /* AVISO de orientação errada */
+      #orientacaoErrada {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100vw; height: 100vh;
+        background: black;
+        color: white;
+        font-size: 24px;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        z-index: 9999;
+      }
+    </style>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js"></script>
 </head>
 
 <body>
+    <!-- AVISO: aparece se o celular estiver em pé -->
+    <div id="orientacaoErrada">
+      Por favor, gire o celular para o modo paisagem.
+    </div>
+
     <audio id="audio" autoplay></audio>
-    <div class= "center" id="game-container"></div>
-    <Script src="./js/phaser.min.js"></Script>
+    <div class="center" id="game-container"></div>
+
+    <!-- Scripts principais do jogo -->
+    <script src="./js/phaser.min.js"></script>
     <script src="./socket.io/socket.io.js"></script>
     <script src="https://accounts.google.com/gsi/client" async></script>
     <script src="./js/axios.min.js"></script>
     <script type="module" src="js/index.js"></script>
+
+    <!-- Service Worker -->
     <script>
-  // Verifica se o navegador suporta Service Workers
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('service-worker.js').then(registration => {
-        console.log('Service Worker registrado com sucesso!', registration.scope);
-      }).catch(error => {
-        console.log('Falha ao registrar o Service Worker:', error);
-      });
-    });
-  }
-</script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('service-worker.js').then(registration => {
+            console.log('Service Worker registrado com sucesso!', registration.scope);
+          }).catch(error => {
+            console.log('Falha ao registrar o Service Worker:', error);
+          });
+        });
+      }
+    </script>
+
+    <!-- Checagem da orientação -->
+    <script>
+      function checarOrientacao() {
+        const emPe = window.innerHeight > window.innerWidth;
+        const aviso = document.getElementById('orientacaoErrada');
+        aviso.style.display = emPe ? 'flex' : 'none';
+      }
+
+      window.addEventListener("resize", checarOrientacao);
+      window.addEventListener("orientationchange", checarOrientacao);
+      window.addEventListener("load", checarOrientacao);
+    </script>
 </body>
 </html>
