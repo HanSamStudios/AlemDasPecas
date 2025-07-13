@@ -1,0 +1,22 @@
+{
+  "name": "Sprint Fox",
+  "short_name": "SprintFox",
+  "description": "Inspirado na precisão e intensidade de Celeste, este jogo coloca duas raposas destemidas em uma jornada onde cada salto é calculado — e cada erro, doloroso. Em um mundo de plataformas afiadas, só a habilidade e a sincronia garantem a sobrevivência. Um cooperativo onde a maior ameaça... é o outro jogador. Domine os controles. Sofra com estilo. E falhe em boa companhia.",
+  "start_url": ".",
+  "display": "fullscreen",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "orientation": "landscape",
+  "icons": [
+    {
+      "src": "cliente/assets/icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "cliente/assets/icone.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
