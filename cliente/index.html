@@ -76,17 +76,6 @@
       }
     </script>
 
-    <!-- Checagem da orientação -->
-    <script>
-      function checarOrientacao() {
-        const emPe = window.innerHeight > window.innerWidth;
-        const aviso = document.getElementById('orientacaoErrada');
-        aviso.style.display = emPe ? 'flex' : 'none';
-      }
-
-      window.addEventListener("resize", checarOrientacao);
-      window.addEventListener("orientationchange", checarOrientacao);
-      window.addEventListener("load", checarOrientacao);
     </script>
 </body>
 </html>
