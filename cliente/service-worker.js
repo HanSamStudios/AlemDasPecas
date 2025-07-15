@@ -54,7 +54,6 @@ const urlsToCache = [
   './assets/morte.mp3',
   './assets/passarosound.mp3',
   './assets/ceu.jpg',
-  './assets/mapa/bomba.png',
   './assets/Spritesheet.png',
   './assets/foxroxo.png',
   './assets/foxmal.png',
