@@ -2,11 +2,35 @@
 <head>
     <title>Sprint Fox</title>
     <link rel="stylesheet" type="text/css" href="./main.css"/>
-    <link rel="icon" type="image/png" href="assets/icon.png">
+    <link rel="icon" sizes="192x192" type="image/png" href="assets/icon.png">
+    <link rel="icon" sizes="512x512" type="image/png" href="assets/icone.png">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="assets/icon.png" sizes="192x192">
     <link rel="apple-touch-icon" href="assets/icone.png" sizes="512x512">
     
+      <meta charset="UTF-8" />
+     <meta name="author" content="Gabriel Hanada e Samuel Etgens" />
+     <meta name="mobile-web-app-capable" content="yes" />
+     <meta name="apple-mobile-web-app-capable" content="yes" />
+      <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+      <meta name="application-name" content="Sprint Fox" />
+    <meta name="apple-mobile-web-app-title" content="Sprint Fox" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="msapplication-navbutton-color" content="#000000" />
+    <meta name="msapplication-starturl" content="./index.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <script type="text/javascript">
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker
+        .register("./sw.js")
+        .then((reg) => console.info("Service worker registered: ", reg))
+        .catch((err) =>
+          console.error("Error registering service worker: ", err)
+        )
+    }
+  </script>
+  
     <style>
       @font-face {
         font-family: 'game-over';
